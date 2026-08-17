@@ -1,0 +1,50 @@
+# Cron externo: en el plan gratuito de Render no hay scheduler ni worker, y sus
+# cron jobs son de pago. GitHub Actions hace ese trabajo gratis.
+#
+# De paso, cada ejecución despierta el contenedor dormido, así que la primera
+# persona que entre por la mañana no se come el arranque en frío.
+#
+# Secretos necesarios en el repositorio:
+#   APP_URL              https://trayectos.onrender.com
+#   INTERNAL_TASK_TOKEN  el mismo valor que la variable del servicio en Render
+
+name: Tareas programadas
+
+on:
+    schedule:
+        # Precios del carburante cuatro veces al día (el Ministerio publica cada ~30 min)
+        - cron: '15 5,10,15,20 * * *'
+    workflow_dispatch:
+
+jobs:
+    sync-prices:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Despertar el servicio
+              run: |
+                  for intento in 1 2 3 4 5 6; do
+                    if curl -fsS --max-time 60 "${{ secrets.APP_URL }}/up" > /dev/null; then
+                      echo "Servicio despierto en el intento $intento"
+                      exit 0
+                    fi
+                    echo "Todavía arrancando… (intento $intento)"
+                    sleep 20
+                  done
+                  echo "El servicio no ha respondido a tiempo"
+                  exit 1
+
+            - name: Sincronizar precios de carburante y electricidad
+              run: |
+                  respuesta=$(curl -fsS --max-time 300 -X POST \
+                    -H "Authorization: Bearer ${{ secrets.INTERNAL_TASK_TOKEN }}" \
+                    -H "Accept: application/json" \
+                    "${{ secrets.APP_URL }}/internal/sync-prices")
+                  echo "$respuesta"
+
+            - name: Recalibrar los coches con sus repostajes
+              run: |
+                  curl -fsS --max-time 120 -X POST \
+                    -H "Authorization: Bearer ${{ secrets.INTERNAL_TASK_TOKEN }}" \
+                    -H "Accept: application/json" \
+                    "${{ secrets.APP_URL }}/internal/calibrate"

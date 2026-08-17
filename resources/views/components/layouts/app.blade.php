@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="utf-8">
+    {{-- viewport-fit=cover para que la barra inferior respete el notch de iOS --}}
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $title ?? 'Libro de Trayectos' }}</title>
+
+    {{-- Instalación como aplicación --}}
+    <link rel="manifest" href="{{ url('/manifest.webmanifest') }}">
+    <meta name="theme-color" content="#171717">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Trayectos">
+    {{-- Safari ignora los iconos del manifest para la pantalla de inicio --}}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url('/icons/apple-touch-icon.png') }}">
+    <link rel="icon" href="{{ url('/icons/icon-192.png') }}" sizes="192x192">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="min-h-full">
+    <header class="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
+        <div class="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
+            <div class="min-w-0">
+                <p class="truncate text-base font-semibold text-neutral-900">{{ $heading ?? 'Libro de Trayectos' }}</p>
+                @isset($subheading)
+                    <p class="truncate text-xs text-neutral-500">{{ $subheading }}</p>
+                @endisset
+            </div>
+
+            <div class="flex shrink-0 items-center gap-2">
+                @isset($actions)
+                    {{ $actions }}
+                @endisset
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+                            title="Salir" aria-label="Salir">
+                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M18.75 15 21.75 12m0 0-3-3m3 3H9"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-2xl px-4 py-4">
+        <x-flash />
+        <x-install-banner />
+
+        {{ $slot }}
+    </main>
+
+    <x-bottom-nav :group="$group ?? null" />
+</body>
+</html>

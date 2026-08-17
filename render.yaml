@@ -1,0 +1,74 @@
+# Despliegue en Render con coste cero.
+#
+# El plan gratuito de Render no pide tarjeta, pero duerme el servicio tras 15
+# minutos sin tráfico. El cron de GitHub Actions (.github/workflows/cron.yml) lo
+# despierta y de paso sincroniza los precios del carburante.
+#
+# La base de datos NO va aquí: el Postgres gratuito de Render caduca a los 30
+# días. Se usa Neon o Supabase (gratis, sin tarjeta) y se pasa por DB_URL.
+
+services:
+    - type: web
+      name: trayectos
+      runtime: docker
+      plan: free
+      region: frankfurt
+      healthCheckPath: /up
+      autoDeploy: true
+      envVars:
+          - key: APP_NAME
+            value: Libro de Trayectos
+          - key: APP_ENV
+            value: production
+          - key: APP_DEBUG
+            value: false
+          - key: APP_KEY
+            sync: false # php artisan key:generate --show
+          - key: APP_URL
+            sync: false # https://trayectos.onrender.com
+          - key: APP_LOCALE
+            value: es
+          - key: APP_TIMEZONE
+            value: Europe/Madrid
+
+          # Postgres externo (Neon / Supabase)
+          - key: DB_CONNECTION
+            value: pgsql
+          - key: DB_URL
+            sync: false
+
+          # Con una sola instancia pequeña, la base de datos hace de todo
+          - key: SESSION_DRIVER
+            value: database
+          - key: CACHE_STORE
+            value: database
+          - key: QUEUE_CONNECTION
+            value: database
+          - key: LOG_CHANNEL
+            value: stderr
+
+          # APIs externas
+          - key: ORS_API_KEY
+            sync: false
+          - key: MITECO_PROVINCES
+            value: 28,45,05,40,19
+          - key: DEFAULT_KWH_PRICE
+            value: 0.15
+
+          # Token compartido con el cron de GitHub Actions
+          - key: INTERNAL_TASK_TOKEN
+            generateValue: true
+
+          # Correo (Brevo: 300 envíos al día sin tarjeta)
+          - key: MAIL_MAILER
+            value: smtp
+          - key: MAIL_HOST
+            sync: false
+          - key: MAIL_PORT
+            value: 587
+          - key: MAIL_USERNAME
+            sync: false
+          - key: MAIL_PASSWORD
+            sync: false
+          - key: MAIL_FROM_ADDRESS
+            sync: false

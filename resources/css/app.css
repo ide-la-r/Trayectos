@@ -1,0 +1,98 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Verde de saldo a favor y rojo de deuda: los dos únicos colores con
+       significado en toda la aplicación. Todo lo demás es escala de grises. */
+    --color-credit-50: oklch(0.96 0.03 155);
+    --color-credit-500: oklch(0.62 0.13 155);
+    --color-credit-700: oklch(0.48 0.11 155);
+    --color-debt-50: oklch(0.96 0.03 25);
+    --color-debt-500: oklch(0.62 0.17 25);
+    --color-debt-700: oklch(0.5 0.16 25);
+}
+
+@layer base {
+    html {
+        /* Evita el zoom automático de iOS al enfocar un campo */
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-neutral-50 text-neutral-900 antialiased;
+        /* Deja sitio a la barra de navegación inferior y al notch */
+        padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+    }
+
+    /* 16 px es el mínimo para que Safari en iOS no haga zoom al enfocar */
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
+    /* Evita el parpadeo de los bloques de Alpine antes de inicializarse */
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+/* En Tailwind 4 los componentes propios se declaran con @utility: así se pueden
+   volver a usar con @apply dentro de otras reglas (btn → btn-primary). */
+
+@utility card {
+    @apply rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm;
+}
+
+@utility card-tight {
+    @apply rounded-xl border border-neutral-200 bg-white p-3;
+}
+
+@utility label {
+    @apply mb-1 block text-sm font-medium text-neutral-700;
+}
+
+@utility field {
+    @apply w-full rounded-xl border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900
+           shadow-sm transition placeholder:text-neutral-400
+           focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 focus:outline-none;
+}
+
+@utility btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+           transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+    @apply btn bg-neutral-900 text-white hover:bg-neutral-800;
+}
+
+@utility btn-secondary {
+    @apply btn border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50;
+}
+
+@utility btn-danger {
+    @apply btn border border-debt-500 bg-white text-debt-700 hover:bg-debt-50;
+}
+
+@utility badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+}
+
+@utility nav-item {
+    @apply flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-neutral-500 transition;
+}
+
+@utility nav-item-active {
+    @apply text-neutral-900;
+}
+
+/* Cifras de dinero: tabulares para que las columnas no bailen */
+@utility money {
+    @apply font-semibold tabular-nums;
+}
