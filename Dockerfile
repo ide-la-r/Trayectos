@@ -6,8 +6,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
+# El plugin de Vite escribe en public/, así que el directorio debe existir
 COPY vite.config.js ./
 COPY resources ./resources
+COPY public ./public
 RUN npm run build
 
 # ─── 2. Dependencias PHP ─────────────────────────────────────────────────────
@@ -22,9 +24,12 @@ RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --opti
 # ─── 3. Imagen final ─────────────────────────────────────────────────────────
 # FrankenPHP trae servidor web y PHP en un único proceso: en 512 MB de RAM
 # gratuitos, cada proceso que no arrancas es memoria que te queda.
-FROM dunglas/frankenphp:php8.4-alpine
+FROM dunglas/frankenphp:1-php8.4-alpine
 
 RUN install-php-extensions pdo_pgsql pdo_sqlite gd intl zip opcache pcntl
+
+# Hace falta para regenerar el autoloader ya con el código de la aplicación
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
@@ -32,16 +37,15 @@ COPY . .
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=assets /app/public/build ./public/build
 
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod +x docker/entrypoint.sh
-
 # OPcache en producción: sin esto se recompila PHP en cada petición
 COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
+RUN composer dump-autoload --optimize --no-dev --no-interaction \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod +x /app/docker/entrypoint.sh
+
 ENV APP_ENV=production \
     APP_DEBUG=false \
-    LOG_CHANNEL=stderr \
-    OCTANE_SERVER=frankenphp
+    LOG_CHANNEL=stderr
 
-ENTRYPOINT ["docker/entrypoint.sh"]
+ENTRYPOINT ["/app/docker/entrypoint.sh"]

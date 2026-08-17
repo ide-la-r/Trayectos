@@ -12,9 +12,11 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Migrar al arrancar es aceptable con un solo contenedor. Con varios habría que
-# sacarlo a un paso previo del despliegue para que no corran a la vez.
-php artisan migrate --force --isolated || {
+# Sin --isolated a propósito: ese modo necesita el almacén de caché, que en esta
+# aplicación es la propia base de datos y todavía no tiene tablas en el primer
+# despliegue. Con un único contenedor no hay carrera que evitar; si algún día
+# hay varias instancias, hay que sacar las migraciones a un paso previo.
+php artisan migrate --force || {
     echo "✗ Las migraciones han fallado"
     exit 1
 }
