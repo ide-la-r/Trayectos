@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'group.member' => EnsureGroupMember::class,
             'internal.token' => VerifyInternalTaskToken::class,
         ]);
+
+        // En Render (y en cualquier túnel) la aplicación va detrás de un proxy
+        // que termina el HTTPS. Sin esto Laravel generaría enlaces http:// y el
+        // navegador bloquearía los assets de una página servida por https.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
