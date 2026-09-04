@@ -2,10 +2,12 @@ import Alpine from 'alpinejs';
 import placeField from './place-field';
 import tripEstimate from './trip-estimate';
 import installPrompt from './install-prompt';
+import inviteLink from './invite-link';
 
 Alpine.data('placeField', placeField);
 Alpine.data('tripEstimate', tripEstimate);
 Alpine.data('installPrompt', installPrompt);
+Alpine.data('inviteLink', inviteLink);
 
 window.Alpine = Alpine;
 Alpine.start();

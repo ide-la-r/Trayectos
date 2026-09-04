@@ -20,6 +20,14 @@ Route::view('/offline', 'offline')->name('offline');
 // la sesión abierta también puede volver a ella sin que se le eche al panel.
 Route::view('/', 'landing')->name('home');
 
+// El enlace de invitación tiene que funcionar tanto para quien ya tiene sesión
+// como para quien llega de cero, así que queda fuera de «auth» y de «guest»:
+// la pantalla decide qué enseñar. Aceptarla sí exige sesión.
+Route::get('/invitacion/{code}', [GroupController::class, 'invitation'])->name('groups.invitation');
+Route::post('/invitacion/{code}', [GroupController::class, 'acceptInvitation'])
+    ->middleware('auth')
+    ->name('groups.invitation.accept');
+
 Route::middleware('guest')->group(function () {
     Route::get('/entrar', [LoginController::class, 'create'])->name('login');
     Route::post('/entrar', [LoginController::class, 'store']);

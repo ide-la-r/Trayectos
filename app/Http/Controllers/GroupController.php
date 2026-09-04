@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Group;
+use App\Models\User;
 use App\Services\Drivers\DriverSuggestionService;
+use App\Services\Drivers\DriverTallyService;
 use App\Services\Ledger\BalanceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,7 +39,7 @@ class GroupController extends Controller
         ]);
 
         return redirect()->route('groups.show', $group)
-            ->with('status', "Grupo creado. Comparte el código {$group->invite_code} con los demás.");
+            ->with('status', "Grupo creado. Comparte el enlace de invitación con los demás, abajo de esta pantalla.");
     }
 
     public function joinForm(): View
@@ -57,12 +59,62 @@ class GroupController extends Controller
             return back()->withErrors(['invite_code' => 'Ese código no corresponde a ningún grupo.']);
         }
 
-        $member = $request->user()->memberIn($group);
+        return $this->addMember($group, $request->user());
+    }
+
+    /**
+     * Pantalla a la que lleva un enlace de invitación. Es pública a propósito:
+     * si quien lo abre no tiene sesión hay que poder enseñarle a qué grupo le
+     * invitan antes de pedirle que se registre, o el enlace no sirve de nada.
+     */
+    public function invitation(Request $request, string $code): View|RedirectResponse
+    {
+        $group = Group::where('invite_code', strtoupper(trim($code)))->first();
+
+        if (! $group) {
+            return view('groups.invitation', ['group' => null]);
+        }
+
+        $user = $request->user();
+
+        // Ya dentro y activo: el enlace no tiene nada que hacer aquí
+        if ($user && $user->memberIn($group)?->active) {
+            return redirect()->route('groups.show', $group);
+        }
+
+        // Sin sesión, se guarda el destino para volver aquí después de entrar
+        if (! $user) {
+            $request->session()->put('url.intended', route('groups.invitation', $group->invite_code));
+        }
+
+        return view('groups.invitation', ['group' => $group]);
+    }
+
+    /**
+     * Confirmación explícita del enlace. Abrir un enlace no debe cambiar nada
+     * por sí solo: se entra al grupo al pulsar el botón, no al tocar el mensaje
+     * de WhatsApp.
+     */
+    public function acceptInvitation(Request $request, string $code): RedirectResponse
+    {
+        $group = Group::where('invite_code', strtoupper(trim($code)))->firstOrFail();
+
+        return $this->addMember($group, $request->user());
+    }
+
+    /**
+     * Alta en el grupo, compartida por el código y por el enlace. Reactivar en
+     * lugar de crear evita duplicar la ficha de quien ya estuvo y se salió: sus
+     * líneas del libro siguen apuntando a ese group_member.
+     */
+    private function addMember(Group $group, User $user): RedirectResponse
+    {
+        $member = $user->memberIn($group);
 
         if ($member) {
             $member->update(['active' => true]);
         } else {
-            $group->members()->create(['user_id' => $request->user()->id]);
+            $group->members()->create(['user_id' => $user->id]);
         }
 
         return redirect()->route('groups.show', $group)
@@ -74,6 +126,7 @@ class GroupController extends Controller
         Group $group,
         BalanceService $balances,
         DriverSuggestionService $suggestions,
+        DriverTallyService $tally,
     ): View {
         $member = $request->attributes->get('group_member');
 
@@ -83,6 +136,7 @@ class GroupController extends Controller
             'balances' => $balances->forGroup($group),
             'myBalance' => $balances->forMember($member),
             'suggestions' => $suggestions->suggest($group),
+            'tally' => $tally->forGroup($group),
             'trips' => $group->trips()
                 ->with(['driver.user', 'vehicle', 'passengers'])
                 ->latest('travelled_on')
