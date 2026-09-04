@@ -29,6 +29,14 @@
         padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
     }
 
+    /* En escritorio la navegación es una columna lateral: no hay barra inferior
+       que esquivar, y ese hueco dejaba una franja muerta al final de la página */
+    @media (min-width: 64rem) {
+        body {
+            padding-bottom: 0;
+        }
+    }
+
     /* 16 px es el mínimo para que Safari en iOS no haga zoom al enfocar */
     input,
     select,

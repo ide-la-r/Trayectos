@@ -6,7 +6,7 @@
 
         @if (empty($plan))
             <div class="card text-center">
-                <p class="text-3xl">✅</p>
+                <span class="mx-auto grid size-12 place-items-center rounded-full bg-credit-50 text-credit-700"><svg class="size-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span>
                 <p class="mt-2 text-sm text-neutral-600">Nadie debe nada a nadie. Las cuentas están a cero.</p>
             </div>
         @else

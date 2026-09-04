@@ -25,46 +25,52 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-full">
-    <header class="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
-        <div class="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-            <a href="{{ route('dashboard') }}" class="shrink-0 text-neutral-900" aria-label="Ir al panel">
-                <x-logo size="size-8" />
-            </a>
+<body class="min-h-full lg:pb-0">
+    {{-- La navegación se pinta como columna lateral en escritorio y como barra
+         inferior en móvil; el desplazamiento del contenido lo compensa lg:pl-60 --}}
+    <x-app-nav :group="$group ?? null" />
 
-            <div class="min-w-0 flex-1">
-                <p class="truncate text-base font-semibold text-neutral-900">{{ $heading ?? 'Libro de Trayectos' }}</p>
-                @isset($subheading)
-                    <p class="truncate text-xs text-neutral-500">{{ $subheading }}</p>
-                @endisset
+    <div class="lg:pl-60">
+        <header class="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
+            <div class="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 lg:max-w-4xl lg:px-8 lg:py-4">
+                {{-- En escritorio la marca ya está en la columna lateral --}}
+                <a href="{{ route('dashboard') }}" class="shrink-0 text-neutral-900 lg:hidden" aria-label="Ir al panel">
+                    <x-logo size="size-8" />
+                </a>
+
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-base font-semibold text-neutral-900 lg:text-xl">{{ $heading ?? 'Libro de Trayectos' }}</p>
+                    @isset($subheading)
+                        <p class="truncate text-xs text-neutral-500 lg:text-sm">{{ $subheading }}</p>
+                    @endisset
+                </div>
+
+                <div class="flex shrink-0 items-center gap-2">
+                    @isset($actions)
+                        {{ $actions }}
+                    @endisset
+
+                    {{-- En escritorio, salir vive al final de la columna lateral --}}
+                    <form method="POST" action="{{ route('logout') }}" class="lg:hidden">
+                        @csrf
+                        <button type="submit" class="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+                                title="Salir" aria-label="Salir">
+                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M18.75 15 21.75 12m0 0-3-3m3 3H9"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
             </div>
+        </header>
 
-            <div class="flex shrink-0 items-center gap-2">
-                @isset($actions)
-                    {{ $actions }}
-                @endisset
+        <main class="mx-auto max-w-2xl px-4 py-4 lg:max-w-4xl lg:px-8 lg:py-8">
+            <x-flash />
+            <x-install-banner />
 
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
-                            title="Salir" aria-label="Salir">
-                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M18.75 15 21.75 12m0 0-3-3m3 3H9"/>
-                        </svg>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </header>
-
-    <main class="mx-auto max-w-2xl px-4 py-4">
-        <x-flash />
-        <x-install-banner />
-
-        {{ $slot }}
-    </main>
-
-    <x-bottom-nav :group="$group ?? null" />
+            {{ $slot }}
+        </main>
+    </div>
 </body>
 </html>
