@@ -6,8 +6,14 @@
     <title>{{ $title ?? 'Libro de Trayectos — las cuentas del coche, claras' }}</title>
     <meta name="description" content="Reparte los gastos de coche calculando lo que cuesta de verdad cada trayecto, desnivel incluido, con contabilidad por partida doble.">
 
+    {{-- Esta es la página desde la que la gente va a instalar la aplicación, así
+         que necesita las mismas metas de Apple que el resto: sin ellas, iOS puede
+         abrir el icono de la pantalla de inicio con la interfaz del navegador. --}}
     <link rel="manifest" href="{{ url('/manifest.webmanifest') }}">
     <meta name="theme-color" content="#171717">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Trayectos">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url('/icons/apple-touch-icon.png') }}">
     <link rel="icon" href="{{ url('/icons/icon-192.png') }}" sizes="192x192">
 
