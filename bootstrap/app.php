@@ -19,6 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'internal.token' => VerifyInternalTaskToken::class,
         ]);
 
+        // Las rutas internas las llama el cron de GitHub Actions con un POST sin
+        // formulario ni sesión, así que no hay token CSRF que enviar: el grupo
+        // «web» las rechazaba con un 419 antes de llegar a VerifyInternalTaskToken.
+        // Lo que las protege es el bearer token de ese middleware, no el CSRF.
+        $middleware->validateCsrfTokens(except: [
+            'internal/*',
+        ]);
+
         // En Render (y en cualquier túnel) la aplicación va detrás de un proxy
         // que termina el HTTPS. Sin esto Laravel generaría enlaces http:// y el
         // navegador bloquearía los assets de una página servida por https.
