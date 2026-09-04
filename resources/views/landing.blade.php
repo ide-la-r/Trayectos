@@ -90,7 +90,7 @@
 </section>
 
 {{-- ─── Cómo funciona ────────────────────────────────────────────────────── --}}
-<section id="como-funciona" class="border-y border-neutral-200 bg-neutral-50">
+<section id="como-funciona" class="border-y border-neutral-200 bg-white">
     <div class="mx-auto max-w-5xl px-5 py-20">
         <h2 class="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">Cómo funciona</h2>
         <p class="mt-3 max-w-xl text-neutral-600">Cuatro pasos, y solo el primero lo haces tú.</p>
@@ -208,7 +208,7 @@
 </section>
 
 {{-- ─── Las cuentas ──────────────────────────────────────────────────────── --}}
-<section id="cuentas" class="border-y border-neutral-200 bg-neutral-50">
+<section id="cuentas" class="border-y border-neutral-200 bg-white">
     <div class="mx-auto max-w-5xl px-5 py-20">
         <h2 class="max-w-2xl text-2xl font-semibold tracking-tight text-balance text-neutral-900 sm:text-3xl">
             Contabilidad de verdad, no una lista de quién debe qué
@@ -324,7 +324,7 @@
                 Autocompletado de direcciones sobre datos de OpenStreetMap.
             </p>
         </div>
-        <div class="card-tight border-neutral-300 bg-neutral-50 p-5">
+        <div class="card-tight border-dashed border-neutral-300 bg-transparent p-5">
             <h3 class="font-semibold text-neutral-900">Y si alguna falla</h3>
             <p class="mt-2 text-sm leading-relaxed text-neutral-600">
                 Se degrada por escalones y te avisa en pantalla. Que se agote una cuota nunca

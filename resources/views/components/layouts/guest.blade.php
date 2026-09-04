@@ -24,7 +24,7 @@
     quedaba en el escritorio no era falta de contenido, era un diseño de móvil
     estirado a 1920 px; repartir el ancho lo elimina en lugar de rellenarlo.
 --}}
-<body class="min-h-full bg-white lg:grid lg:min-h-screen lg:grid-cols-2" style="padding-bottom: 0">
+<body class="min-h-full bg-neutral-50 lg:grid lg:min-h-screen lg:grid-cols-2" style="padding-bottom: 0">
 
 {{-- ── Panel de marca ─────────────────────────────────────────────────────── --}}
 <div class="relative isolate flex flex-col overflow-hidden bg-neutral-950 text-neutral-50 lg:justify-between lg:p-12">

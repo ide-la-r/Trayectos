@@ -26,7 +26,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 {{-- Sin la reserva para la barra inferior: aquí no hay navegación de aplicación --}}
-<body class="min-h-full bg-white" style="padding-bottom: 0">
+<body class="min-h-full bg-neutral-50" style="padding-bottom: 0">
 
 <header class="sticky top-0 z-30 border-b border-neutral-200/80 bg-white/85 backdrop-blur-md">
     <nav class="mx-auto flex max-w-5xl items-center gap-4 px-5 py-3" aria-label="Principal">
@@ -52,7 +52,7 @@
 
 {{ $slot }}
 
-<footer class="border-t border-neutral-200 bg-neutral-50">
+<footer class="border-t border-neutral-200 bg-white">
     <div class="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-10 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3 text-neutral-900">
             <x-logo size="size-9" />
