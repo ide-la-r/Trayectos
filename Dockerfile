@@ -28,6 +28,15 @@ FROM dunglas/frankenphp:1-php8.4-alpine
 
 RUN install-php-extensions pdo_pgsql pdo_sqlite gd intl zip opcache pcntl
 
+# El binario de FrankenPHP trae CAP_NET_BIND_SERVICE marcada en el propio
+# fichero para poder escuchar en el 80 sin ser root. Render —como cualquier
+# plataforma que arranca con no-new-privileges— se niega a ejecutar un binario
+# que gane privilegios: el exec falla con EPERM y el contenedor sale con status
+# 126. El puerto que asigna Render está por encima de 1024, así que la
+# capability no hace falta y se quita.
+RUN apk add --no-cache libcap \
+    && setcap -r /usr/local/bin/frankenphp
+
 # Hace falta para regenerar el autoloader ya con el código de la aplicación
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
