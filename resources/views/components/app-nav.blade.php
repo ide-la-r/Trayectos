@@ -32,7 +32,7 @@
 @endphp
 
 {{-- ── Columna lateral (escritorio) ───────────────────────────────────────── --}}
-<aside class="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-neutral-200 bg-white px-4 py-5 lg:flex">
+<aside class="vt-nav-side fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-neutral-200 bg-white px-4 py-5 lg:flex">
     <a href="{{ route('dashboard') }}" class="mb-8 px-2 text-neutral-900" aria-label="Ir al panel">
         <x-logo :wordmark="true" size="size-9" />
     </a>
@@ -67,7 +67,7 @@
 </aside>
 
 {{-- ── Barra inferior (móvil) ─────────────────────────────────────────────── --}}
-<nav class="fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white/95 backdrop-blur lg:hidden"
+<nav class="vt-nav-bottom fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white/95 backdrop-blur lg:hidden"
      style="padding-bottom: env(safe-area-inset-bottom)"
      aria-label="Secciones">
     <div class="mx-auto flex max-w-2xl items-stretch px-2">

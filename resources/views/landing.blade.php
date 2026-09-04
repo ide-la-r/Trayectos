@@ -4,7 +4,7 @@
 <section class="relative isolate overflow-hidden bg-neutral-950 text-neutral-50">
     {{-- La carretera de la marca, a tamaño grande y muy tenue: el mismo dibujo
          del icono sirve de fondo sin necesidad de ninguna imagen. --}}
-    <svg class="pointer-events-none absolute -bottom-24 left-1/2 -z-10 w-[46rem] max-w-none -translate-x-1/2 opacity-[0.07]"
+    <svg class="pointer-events-none absolute -bottom-24 left-1/2 -z-10 w-[46rem] max-w-none -translate-x-1/2 road-ambient"
          viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">
         <path d="M6 45 L42 45 L28.6 14.6 L19.4 14.6 Z"/>
         <circle cx="24" cy="9.2" r="5.4"/>
@@ -65,7 +65,7 @@
     </h2>
 
     <div class="mt-10 grid gap-8 md:grid-cols-2">
-        <div class="card p-6">
+        <div class="card p-6 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
             <p class="badge bg-neutral-100 text-neutral-600">El problema físico</p>
             <p class="mt-4 leading-relaxed text-neutral-700">
                 El consumo que anuncia un fabricante corresponde a terreno esencialmente
@@ -76,7 +76,7 @@
             </p>
         </div>
 
-        <div class="card p-6">
+        <div class="card p-6 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
             <p class="badge bg-neutral-100 text-neutral-600">El problema contable</p>
             <p class="mt-4 leading-relaxed text-neutral-700">
                 Las cuentas de un grupo en notas del móvil o en una hoja de cálculo acaban
@@ -294,31 +294,31 @@
     </p>
 
     <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="card-tight p-5">
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
             <h3 class="font-semibold text-neutral-900">Ministerio para la Transición Ecológica</h3>
             <p class="mt-2 text-sm leading-relaxed text-neutral-600">
                 El precio oficial de cada gasolinera, actualizado varias veces al día.
             </p>
         </div>
-        <div class="card-tight p-5">
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
             <h3 class="font-semibold text-neutral-900">Red Eléctrica de España</h3>
             <p class="mt-2 text-sm leading-relaxed text-neutral-600">
                 El PVPC del día para los coches eléctricos, o tu tarifa real si la declaras.
             </p>
         </div>
-        <div class="card-tight p-5">
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
             <h3 class="font-semibold text-neutral-900">OpenRouteService</h3>
             <p class="mt-2 text-sm leading-relaxed text-neutral-600">
                 Distancia y desnivel reales por carretera, no en línea recta.
             </p>
         </div>
-        <div class="card-tight p-5">
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
             <h3 class="font-semibold text-neutral-900">Open Topo Data</h3>
             <p class="mt-2 text-sm leading-relaxed text-neutral-600">
                 Altitudes del terreno a 25 m de resolución, como respaldo.
             </p>
         </div>
-        <div class="card-tight p-5">
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
             <h3 class="font-semibold text-neutral-900">Photon</h3>
             <p class="mt-2 text-sm leading-relaxed text-neutral-600">
                 Autocompletado de direcciones sobre datos de OpenStreetMap.

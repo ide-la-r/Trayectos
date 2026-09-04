@@ -28,22 +28,24 @@
 {{-- Sin la reserva para la barra inferior: aquí no hay navegación de aplicación --}}
 <body class="min-h-full bg-neutral-50" style="padding-bottom: 0">
 
-<header class="sticky top-0 z-30 border-b border-neutral-200/80 bg-white/85 backdrop-blur-md">
+<header class="vt-chrome sticky top-0 z-30 border-b border-neutral-200/80 bg-white/85 backdrop-blur-md">
     <nav class="mx-auto flex max-w-5xl items-center gap-4 px-5 py-3" aria-label="Principal">
         <a href="{{ route('home') }}" class="text-neutral-900" aria-label="Libro de Trayectos — inicio">
             <x-logo :wordmark="true" size="size-9" />
         </a>
 
         <div class="ml-auto hidden items-center gap-7 text-sm text-neutral-600 md:flex">
-            <a href="#como-funciona" class="transition hover:text-neutral-900">Cómo funciona</a>
-            <a href="#coste" class="transition hover:text-neutral-900">El coste real</a>
-            <a href="#cuentas" class="transition hover:text-neutral-900">Las cuentas</a>
-            <a href="#datos" class="transition hover:text-neutral-900">De dónde salen los datos</a>
+            <a href="#como-funciona" class="link-grow transition-colors hover:text-neutral-900">Cómo funciona</a>
+            <a href="#coste" class="link-grow transition-colors hover:text-neutral-900">El coste real</a>
+            <a href="#cuentas" class="link-grow transition-colors hover:text-neutral-900">Las cuentas</a>
+            <a href="#datos" class="link-grow transition-colors hover:text-neutral-900">De dónde salen los datos</a>
         </div>
 
-        <a href="{{ route('login') }}" class="btn-primary ml-auto shrink-0 md:ml-0">
+        {{-- group para que la flecha avance al pasar el ratón por el botón --}}
+        <a href="{{ route('login') }}" class="btn-primary group ml-auto shrink-0 md:ml-0">
             Área cliente
-            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg class="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
+                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12l-7.5 7.5M21 12H3"/>
             </svg>
         </a>
@@ -63,9 +65,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-neutral-600">
-            <a href="https://github.com/ide-la-r/Trayectos" class="transition hover:text-neutral-900">Código en GitHub</a>
-            <a href="{{ route('login') }}" class="transition hover:text-neutral-900">Entrar</a>
-            <a href="{{ route('register') }}" class="transition hover:text-neutral-900">Crear cuenta</a>
+            <a href="https://github.com/ide-la-r/Trayectos" class="link-grow transition-colors hover:text-neutral-900">Código en GitHub</a>
+            <a href="{{ route('login') }}" class="link-grow transition-colors hover:text-neutral-900">Entrar</a>
+            <a href="{{ route('register') }}" class="link-grow transition-colors hover:text-neutral-900">Crear cuenta</a>
         </div>
     </div>
 </footer>

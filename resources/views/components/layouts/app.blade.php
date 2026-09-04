@@ -31,7 +31,7 @@
     <x-app-nav :group="$group ?? null" />
 
     <div class="lg:pl-60">
-        <header class="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
+        <header class="vt-chrome sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
             <div class="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 lg:max-w-4xl lg:px-8 lg:py-4">
                 {{-- En escritorio la marca ya está en la columna lateral --}}
                 <a href="{{ route('dashboard') }}" class="shrink-0 text-neutral-900 lg:hidden" aria-label="Ir al panel">

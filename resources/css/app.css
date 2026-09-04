@@ -50,15 +50,110 @@
     }
 }
 
+/* ─── Transiciones entre páginas ──────────────────────────────────────────────
+   La aplicación es un monolito con navegación clásica, así que cada clic era un
+   salto seco. Esto lo suaviza sin convertirla en una SPA y sin una línea de
+   JavaScript: el navegador captura la página que se va, la que llega, y anima
+   entre las dos. Chromium 126+ y Safari 18.2+; donde no hay soporte —Firefox
+   por ahora— navega como siempre y no se rompe nada. */
+@view-transition {
+    navigation: auto;
+}
+
+/* Rápido a propósito: por encima de ~250 ms la navegación se siente lenta en
+   lugar de suave, que es peor que el salto seco. */
+::view-transition-old(root) {
+    animation: 90ms cubic-bezier(0.4, 0, 1, 1) both page-out;
+}
+
+::view-transition-new(root) {
+    animation: 220ms cubic-bezier(0, 0, 0.2, 1) 40ms both page-in;
+}
+
+@keyframes page-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes page-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+
+/* La cabecera y la navegación laterales no deben desvanecerse con el resto: al
+   nombrarlas, el navegador las trata como el mismo elemento en las dos páginas
+   y se quedan quietas. Es lo que hace que parezca una aplicación y no una web
+   recargándose. */
+@utility vt-chrome {
+    view-transition-name: chrome;
+}
+
+/* Dos nombres y no uno compartido: la columna lateral y la barra inferior nunca
+   se ven a la vez, pero dos elementos con el mismo view-transition-name en una
+   misma página abortan la transición completa. Un elemento en display:none no
+   debería reclamar su nombre; no merece la pena que todo dependa de eso. */
+@utility vt-nav-side {
+    view-transition-name: nav-side;
+}
+
+@utility vt-nav-bottom {
+    view-transition-name: nav-bottom;
+}
+
+/* Movimiento ambiental del asfalto de la marca: es decorativo y va sobre un
+   elemento que ya está visible, así que no esconde contenido en reposo. */
+@keyframes road-breathe {
+    0%,
+    100% {
+        opacity: 0.06;
+    }
+    50% {
+        opacity: 0.11;
+    }
+}
+
+@utility road-ambient {
+    animation: road-breathe 9s ease-in-out infinite;
+}
+
+/* Quien pide menos movimiento no recibe ninguno, ni de página ni ambiental */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+
+    .road-ambient {
+        animation: none !important;
+    }
+}
+
 /* En Tailwind 4 los componentes propios se declaran con @utility: así se pueden
    volver a usar con @apply dentro de otras reglas (btn → btn-primary). */
 
+/* La transición va en la tarjeta y no en cada hover: así cualquier cambio de
+   borde o de sombra entra suave en lugar de saltar, y las que no reaccionan al
+   ratón no pagan nada. */
 @utility card {
-    @apply rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm;
+    @apply rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm
+           transition duration-200 ease-out;
 }
 
 @utility card-tight {
-    @apply rounded-xl border border-neutral-200 bg-white p-3;
+    @apply rounded-xl border border-neutral-200 bg-white p-3
+           transition duration-200 ease-out;
+}
+
+/* Enlace con subrayado que crece de izquierda a derecha. Con background-size
+   en lugar de un ::after, para que funcione en enlaces que ocupan dos líneas. */
+@utility link-grow {
+    @apply bg-gradient-to-r from-current to-current bg-[length:0%_1px]
+           bg-[position:0_100%] bg-no-repeat transition-[background-size]
+           duration-300 ease-out hover:bg-[length:100%_1px];
 }
 
 @utility label {
