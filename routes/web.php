@@ -16,8 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/offline', 'offline')->name('offline');
 
+// La portada es pública y va fuera del grupo «guest» a propósito: quien ya tiene
+// la sesión abierta también puede volver a ella sin que se le eche al panel.
+Route::view('/', 'landing')->name('home');
+
 Route::middleware('guest')->group(function () {
-    Route::get('/', [LoginController::class, 'create'])->name('home');
     Route::get('/entrar', [LoginController::class, 'create'])->name('login');
     Route::post('/entrar', [LoginController::class, 'store']);
     Route::get('/registro', [RegisterController::class, 'create'])->name('register');

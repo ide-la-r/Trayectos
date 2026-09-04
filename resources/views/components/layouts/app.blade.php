@@ -17,12 +17,22 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url('/icons/apple-touch-icon.png') }}">
     <link rel="icon" href="{{ url('/icons/icon-192.png') }}" sizes="192x192">
 
+    {{-- Instrument Sans se declaraba en app.css y el plugin de Vite ya la
+         descargaba al build, pero nadie la enlazaba: la aplicación llevaba desde
+         el principio cayendo a la fuente del sistema. Vite::fonts() la sirve
+         desde nuestro propio dominio, así que también funciona sin conexión. --}}
+    {{ Vite::fonts() }}
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-full">
     <header class="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
-        <div class="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
-            <div class="min-w-0">
+        <div class="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
+            <a href="{{ route('dashboard') }}" class="shrink-0 text-neutral-900" aria-label="Ir al panel">
+                <x-logo size="size-8" />
+            </a>
+
+            <div class="min-w-0 flex-1">
                 <p class="truncate text-base font-semibold text-neutral-900">{{ $heading ?? 'Libro de Trayectos' }}</p>
                 @isset($subheading)
                     <p class="truncate text-xs text-neutral-500">{{ $subheading }}</p>
