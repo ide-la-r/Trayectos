@@ -1,8 +1,9 @@
 # Cron externo: en el plan gratuito de Render no hay scheduler ni worker, y sus
 # cron jobs son de pago. GitHub Actions hace ese trabajo gratis.
 #
-# De paso, cada ejecución despierta el contenedor dormido, así que la primera
-# persona que entre por la mañana no se come el arranque en frío.
+# De paso, cada ejecución despierta el contenedor dormido. Mantenerlo despierto
+# durante el día es trabajo de keepalive.yml, que hace el ping cada 10 minutos
+# entre las 06:00 y las 21:00 UTC.
 #
 # Secretos necesarios en el repositorio:
 #   APP_URL              https://trayectos.onrender.com

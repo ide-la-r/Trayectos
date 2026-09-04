@@ -1,0 +1,47 @@
+# Mantener el contenedor despierto en horario razonable.
+#
+# El plan gratuito de Render duerme el servicio a los 15 minutos sin trafico y
+# tarda cerca de un minuto en despertar. Un ping continuo lo evitaria, pero el
+# plan da 750 horas de instancia al mes y estar despierto las 24 horas consume
+# unas 730: cabe, pero sin margen, y el castigo por agotarlas es que Render
+# suspende todos los servicios gratuitos hasta el mes siguiente.
+#
+# Asi que se mantiene despierto solo en la franja en la que alguien va a abrirlo:
+# de 06:00 a 21:00 UTC son unas 450 horas al mes, holgado bajo el limite, y fuera
+# de esa franja duerme y no gasta nada.
+#
+# Aviso honesto: la programacion de GitHub Actions es "best effort" y puede
+# retrasarse varios minutos con carga alta, asi que algun arranque en frio
+# suelto es posible. Para garantia total habria que usar un servicio de
+# monitorizacion apuntando a /up, a cambio de volver a las ~730 horas.
+
+name: Mantener despierto
+
+on:
+    schedule:
+        # Cada 10 minutos entre las 06:00 y las 20:50 UTC
+        - cron: '*/10 6-20 * * *'
+    workflow_dispatch:
+
+# Si una ejecucion se solapa con la anterior, no tiene sentido acumularlas
+concurrency:
+    group: keepalive
+    cancel-in-progress: true
+
+jobs:
+    ping:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Despertar el servicio
+              run: |
+                  for intento in 1 2 3; do
+                    if curl -fsS --max-time 60 "${{ secrets.APP_URL }}/up" > /dev/null; then
+                      echo "Despierto en el intento $intento"
+                      exit 0
+                    fi
+                    echo "Todavia arrancando... (intento $intento)"
+                    sleep 20
+                  done
+                  echo "No ha respondido a tiempo"
+                  exit 1

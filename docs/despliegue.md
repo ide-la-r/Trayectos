@@ -11,8 +11,8 @@ Render · Free Web Service ──────► Neon · PostgreSQL free
   Docker · 512 MB · 750 h/mes      0,5 GB · sin tarjeta
   HTTPS y dominio incluidos
         ▲
-        │ ping cada 5 min
-   UptimeRobot free
+        | ping cada 10 min
+   Actions (06:00-21:00 UTC)
 ```
 
 ## 1. Base de datos — Neon
@@ -25,7 +25,7 @@ El plan gratuito da 0,5 GB y 100 horas de cómputo al mes. Para un grupo de amig
 ocupa es el catálogo de gasolineras (~5 MB por provincia sincronizada).
 
 **Alternativa**: Supabase (500 MB, tampoco pide tarjeta). Ambos suspenden el proyecto por
-inactividad; el ping de UptimeRobot lo evita.
+inactividad; el ping de keepalive.yml lo evita en horario diurno.
 
 ## 2. Aplicación — Render
 
@@ -48,18 +48,31 @@ El contenedor migra la base de datos al arrancar (`docker/entrypoint.sh`).
 ### Lo que hay que saber del plan gratuito
 
 - **Duerme tras 15 minutos sin tráfico** y tarda 30-50 s en despertar. Se resuelve en el paso 3.
-- 750 horas al mes; un contenedor 24/7 consume ~744. Cabe justo, y el sueño ayuda.
+- 750 horas al mes; despierto las 24 horas consume ~730, así que el paso 3 lo limita a una franja.
 - 512 MB de RAM. FrankenPHP en un solo proceso y OPcache configurado van holgados.
 - **El Postgres de Render caduca a los 30 días**: por eso la base de datos va en Neon.
 - Los *cron jobs* de Render son de pago: por eso el cron va en GitHub Actions.
 
-## 3. Mantenerlo despierto — UptimeRobot
+## 3. Mantenerlo despierto — GitHub Actions
 
-1. Cuenta en [uptimerobot.com](https://uptimerobot.com) (50 monitores gratis, sin tarjeta).
-2. Monitor HTTP(s) a `https://tu-app.onrender.com/up` cada **5 minutos**.
+Lo hace [`.github/workflows/keepalive.yml`](../.github/workflows/keepalive.yml) sin configurar nada
+fuera del repositorio: un ping a `/up` cada 10 minutos **entre las 06:00 y las 21:00 UTC**. Solo
+necesita el secreto `APP_URL`, el mismo que ya usa el cron de tareas.
 
-Sirve de vigilancia y de despertador. `/up` es el endpoint de salud de Laravel: responde sin tocar
-sesión ni vistas.
+La franja es deliberada, y esta es la cuenta que la justifica: un ping continuo lo mantendría
+despierto siempre, pero el plan da **750 horas de instancia al mes** y estar despierto las 24 horas
+consume unas **730**. Cabe, pero sin margen, y el castigo por agotarlas es que Render **suspende
+todos los servicios gratuitos hasta el mes siguiente**. Con 15 horas al día son unas 450, y fuera de
+la franja el contenedor duerme y no gasta nada.
+
+`/up` es el endpoint de salud nativo de Laravel y vive fuera del grupo `web`: responde sin abrir
+sesión ni tocar la base de datos. Ese detalle es el que mantiene a Neon dormido, porque sus 100 horas
+de cómputo mensuales solo corren cuando alguien consulta de verdad.
+
+**Aviso honesto:** la programación de GitHub Actions es *best effort* y puede retrasarse varios
+minutos con carga alta, así que algún arranque en frío suelto es posible. Si quisieras garantía
+total, un monitor de [UptimeRobot](https://uptimerobot.com) (50 monitores gratis, sin tarjeta)
+apuntando a `/up` cada 5 minutos es más fiable, a cambio de volver a las ~730 horas.
 
 ## 4. Tareas programadas — GitHub Actions
 
@@ -96,8 +109,7 @@ coche. En iOS, *Compartir → Añadir a pantalla de inicio* (la propia aplicaci�
 |---|---|
 | Render Free Web Service | 0 € |
 | Neon PostgreSQL Free | 0 € |
-| GitHub Actions | 0 € |
-| UptimeRobot Free | 0 € |
+| GitHub Actions (cron y despertador) | 0 € |
 | OpenRouteService, Open Topo Data, Photon, MITECO, REE | 0 € |
 | **Total** | **0 €/mes** |
 
