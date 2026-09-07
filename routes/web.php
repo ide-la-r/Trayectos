@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\TripEstimateController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FuelPriceController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\InternalTaskController;
 use App\Http\Controllers\LedgerController;
@@ -39,6 +40,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/salir', [LoginController::class, 'destroy'])->name('logout');
 
     Route::get('/panel', DashboardController::class)->name('dashboard');
+
+    // Precios de carburante de la zona: histórico y dónde está más barato
+    Route::get('/precios', FuelPriceController::class)->name('prices');
 
     // ─── Grupos ────────────────────────────────────────────────────────────
     Route::get('/grupos/crear', [GroupController::class, 'create'])->name('groups.create');
