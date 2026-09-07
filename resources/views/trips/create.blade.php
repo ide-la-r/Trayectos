@@ -207,6 +207,55 @@
 
                         <p x-show="estimate.route_warning" class="rounded-lg bg-neutral-100 px-3 py-2 text-xs text-neutral-600"
                            x-text="estimate.route_warning"></p>
+
+                        {{--
+                            Cuánto costaría el mismo trayecto con cada coche del
+                            grupo. Solo llega cuando hay más de uno con plazas
+                            suficientes: una tabla de una fila no compara nada.
+                        --}}
+                        <template x-if="estimate.comparison && estimate.comparison.length">
+                            <div class="border-t border-neutral-100 pt-3">
+                                <p class="text-xs font-semibold text-neutral-900">Con qué coche sale más barato</p>
+                                <p class="mt-0.5 text-xs text-neutral-500">
+                                    Este mismo trayecto, con cada coche del grupo. Toca uno para elegirlo.
+                                </p>
+
+                                <ul class="mt-2 space-y-1.5">
+                                    <template x-for="fila in estimate.comparison" :key="fila.vehicle_id">
+                                        <li>
+                                            <button type="button" @click="elegirCoche(fila.vehicle_id)"
+                                                    class="flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition"
+                                                    :class="fila.selected
+                                                        ? 'border-neutral-900 bg-neutral-50'
+                                                        : 'border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50'">
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="truncate text-sm font-medium text-neutral-900">
+                                                        <span x-text="fila.label"></span>
+                                                        <span x-show="fila.cheapest"
+                                                              class="badge ml-1 bg-credit-50 text-credit-700">más barato</span>
+                                                        <span x-show="fila.selected && ! fila.cheapest"
+                                                              class="badge ml-1 bg-neutral-900 text-white">elegido</span>
+                                                    </p>
+                                                    <p class="truncate text-xs text-neutral-500">
+                                                        <span x-text="fila.owner"></span>
+                                                        <template x-if="fila.extra > 0">
+                                                            <span>· <span x-text="moneda(fila.extra)"></span> más que el más barato</span>
+                                                        </template>
+                                                    </p>
+                                                </div>
+
+                                                <div class="shrink-0 text-right">
+                                                    <p class="money text-sm text-neutral-900" x-text="moneda(fila.cost)"></p>
+                                                    <p class="text-xs text-neutral-500">
+                                                        <span x-text="moneda(fila.per_payer)"></span> cada uno
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
                     </div>
                 </template>
             </section>

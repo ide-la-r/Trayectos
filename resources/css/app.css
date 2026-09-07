@@ -44,6 +44,14 @@
         font-size: 16px;
     }
 
+    /* Las casillas y los radios nativos toman el color de acento del sistema
+       operativo: en Windows salían rosas dentro de una interfaz que no tiene
+       más color que el verde del saldo y el rojo de la deuda. */
+    input[type='checkbox'],
+    input[type='radio'] {
+        accent-color: var(--color-neutral-900);
+    }
+
     /* Evita el parpadeo de los bloques de Alpine antes de inicializarse */
     [x-cloak] {
         display: none !important;

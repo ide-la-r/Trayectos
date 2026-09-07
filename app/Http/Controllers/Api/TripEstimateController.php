@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\Vehicle;
 use App\Services\Trips\TripDraft;
 use App\Services\Trips\TripEstimator;
+use App\Services\Trips\VehicleComparisonService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,8 +19,11 @@ use Illuminate\Http\Request;
  */
 class TripEstimateController extends Controller
 {
-    public function __invoke(Request $request, TripEstimator $estimator): JsonResponse
-    {
+    public function __invoke(
+        Request $request,
+        TripEstimator $estimator,
+        VehicleComparisonService $comparisons,
+    ): JsonResponse {
         $data = $request->validate([
             'group_id' => ['required', 'exists:groups,id'],
             'vehicle_id' => ['required', 'exists:vehicles,id'],
@@ -78,9 +82,26 @@ class TripEstimateController extends Controller
         );
 
         $estimate = $estimator->estimate($draft);
+        $payerCount = (int) ($data['payers'] ?? $occupants);
 
-        return response()->json($estimate->toPreview(
-            payerCount: (int) ($data['payers'] ?? $occupants),
-        ));
+        // La comparación viaja en la misma respuesta a propósito: el formulario
+        // ya llama a este endpoint en cada cambio y la ruta está cacheada, así
+        // que un segundo viaje de ida y vuelta no aportaría nada.
+        $comparison = $comparisons->compare($draft, $payerCount)
+            ->map(fn (object $row) => [
+                'vehicle_id' => $row->vehicle->id,
+                'label' => $row->vehicle->label,
+                'owner' => $row->vehicle->owner?->name,
+                'cost' => round($row->cost_cents / 100, 2),
+                'per_payer' => round($row->per_payer_cents / 100, 2),
+                'extra' => round($row->extra_cents / 100, 2),
+                'cheapest' => $row->cheapest,
+                'selected' => $row->is_selected,
+            ])
+            ->all();
+
+        return response()->json($estimate->toPreview(payerCount: $payerCount) + [
+            'comparison' => $comparison,
+        ]);
     }
 }

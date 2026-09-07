@@ -99,4 +99,31 @@ export default (config = {}) => ({
 
         return (cents / 100).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
     },
+
+    /** La comparación llega ya en euros, no en céntimos como el resto. */
+    moneda(amount) {
+        if (amount === null || amount === undefined) {
+            return '—';
+        }
+
+        return amount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+    },
+
+    /**
+     * Elegir un coche desde la tabla de comparación. Cambiar el value de un
+     * select por JavaScript no dispara «change», así que hay que emitirlo a
+     * mano o el powertrain que lee el formulario se queda con el del coche
+     * anterior y los campos de batería aparecen o desaparecen mal.
+     */
+    elegirCoche(vehicleId) {
+        const select = this.$refs.vehicle;
+
+        if (!select) {
+            return;
+        }
+
+        select.value = String(vehicleId);
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        this.schedule(150);
+    },
 });

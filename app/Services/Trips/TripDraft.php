@@ -43,6 +43,37 @@ final class TripDraft
             && $this->destinationLat !== null && $this->destinationLon !== null;
     }
 
+    /**
+     * El mismo trayecto con otro coche. Sirve para costear un viaje con cada
+     * vehículo del grupo sin volver a montar el borrador entero, y devuelve una
+     * copia: mutar el coche sobre un objeto compartido es la forma de acabar
+     * comparando un trayecto contra sí mismo.
+     */
+    public function withVehicle(Vehicle $vehicle): self
+    {
+        return new self(
+            group: $this->group,
+            vehicle: $vehicle,
+            driver: $this->driver,
+            travelledOn: $this->travelledOn,
+            originLabel: $this->originLabel,
+            destinationLabel: $this->destinationLabel,
+            passengerWeights: $this->passengerWeights,
+            originLat: $this->originLat,
+            originLon: $this->originLon,
+            destinationLat: $this->destinationLat,
+            destinationLon: $this->destinationLon,
+            roundTrip: $this->roundTrip,
+            manualDistanceM: $this->manualDistanceM,
+            manualAscentM: $this->manualAscentM,
+            manualDescentM: $this->manualDescentM,
+            luggageKg: $this->luggageKg,
+            batteryStartPct: $this->batteryStartPct,
+            notes: $this->notes,
+            createdBy: $this->createdBy,
+        );
+    }
+
     public function hasManualDistance(): bool
     {
         return $this->manualDistanceM !== null && $this->manualDistanceM > 0;
