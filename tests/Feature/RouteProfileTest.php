@@ -184,6 +184,18 @@ class RouteProfileTest extends TestCase
             ->assertSee('y llega a 845', false);
     }
 
+    public function test_el_mapa_se_ofrece_pero_no_se_carga_solo(): void
+    {
+        $respuesta = $this->actingAs($this->dueno)
+            ->get(route('trips.show', [$this->group, $this->viaje($this->puerto())]));
+
+        $respuesta->assertOk()
+            ->assertSee('Ver el recorrido en el mapa')
+            // La geometria viaja con la pagina; MapLibre y las teselas no
+            ->assertSee('tripMap({ geometry:', false)
+            ->assertDontSee('maplibre-gl-BVifuw4r', false);
+    }
+
     public function test_la_pantalla_no_ensena_perfil_cuando_no_hay_recorrido(): void
     {
         $respuesta = $this->actingAs($this->dueno)

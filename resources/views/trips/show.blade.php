@@ -59,6 +59,7 @@
     @if ($profile)
         <section class="card mb-4">
             <x-route-profile :profile="$profile" />
+            <x-route-map :geometry="$trip->route_geometry" />
         </section>
     @endif
 

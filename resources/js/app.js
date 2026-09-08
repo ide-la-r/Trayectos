@@ -5,12 +5,14 @@ import installPrompt from './install-prompt';
 import inviteLink from './invite-link';
 import fuelArea from './fuel-area';
 import nativeMapLinks from './map-links';
+import tripMap from './trip-map';
 
 Alpine.data('placeField', placeField);
 Alpine.data('tripEstimate', tripEstimate);
 Alpine.data('installPrompt', installPrompt);
 Alpine.data('inviteLink', inviteLink);
 Alpine.data('fuelArea', fuelArea);
+Alpine.data('tripMap', tripMap);
 
 window.Alpine = Alpine;
 Alpine.start();

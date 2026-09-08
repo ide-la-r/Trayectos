@@ -146,6 +146,15 @@
 /* La transición va en la tarjeta y no en cada hover: así cualquier cambio de
    borde o de sombra entra suave en lugar de saltar, y las que no reaccionan al
    ratón no pagan nada. */
+@utility trip-marker {
+    /* Salida en negro, llegada en blanco: se lee «de aqui a aqui» */
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 9999px;
+    border: 2px solid var(--color-neutral-900);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
 @utility card {
     @apply rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm
            transition duration-200 ease-out;
