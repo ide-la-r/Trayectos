@@ -35,9 +35,12 @@ jobs:
                   echo "El servicio no ha respondido a tiempo"
                   exit 1
 
+            # 570 s y no 300: con Andalucia entera son ocho provincias y unas
+            # 2.100 estaciones, y el limite anterior se quedaba corto. El tope
+            # real lo pone el set_time_limit(600) del endpoint interno.
             - name: Sincronizar precios de carburante y electricidad
               run: |
-                  respuesta=$(curl -fsS --max-time 300 -X POST \
+                  respuesta=$(curl -fsS --max-time 570 -X POST \
                     -H "Authorization: Bearer ${{ secrets.INTERNAL_TASK_TOKEN }}" \
                     -H "Accept: application/json" \
                     "${{ secrets.APP_URL }}/internal/sync-prices")
