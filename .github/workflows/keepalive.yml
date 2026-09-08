@@ -10,10 +10,21 @@
 # de 06:00 a 21:00 UTC son unas 450 horas al mes, holgado bajo el limite, y fuera
 # de esa franja duerme y no gasta nada.
 #
-# Aviso honesto: la programacion de GitHub Actions es "best effort" y puede
-# retrasarse varios minutos con carga alta, asi que algun arranque en frio
-# suelto es posible. Para garantia total habria que usar un servicio de
-# monitorizacion apuntando a /up, a cambio de volver a las ~730 horas.
+# NO FUNCIONA, y esto esta medido, no supuesto (09-09-2026). El cron dice cada
+# 10 minutos; GitHub lo ejecuta cada 2 o 4 HORAS. Ejecuciones reales del dia 8:
+# 10:31, 14:45, 18:07 y 21:06 UTC. Ademas lanza trabajos fuera de la ventana
+# (22:48, 22:25) porque los arrastra con una o dos horas de retraso.
+#
+# La causa es que la programacion de GitHub Actions es "best effort" y los
+# horarios de mucha frecuencia en repositorios publicos se descartan sin aviso.
+# Render duerme a los 15 minutos, asi que un ping cada 2-4 horas no mantiene
+# nada despierto: solo evita el arranque en frio a quien entre justo despues.
+#
+# Se deja porque no cuesta nada y esos pocos despertares no sobran, pero para
+# que el servicio este despierto de verdad hace falta un servicio de
+# monitorizacion externo (cron-job.org, UptimeRobot y similares) apuntando a
+# /up cada 5 minutos. Ojo con las 750 horas/mes del plan gratuito: 24 horas al
+# dia son unas 730 y no dejan margen, asi que conviene limitar el horario.
 
 name: Mantener despierto
 
