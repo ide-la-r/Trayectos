@@ -7,6 +7,7 @@ namespace App\Services\Geocoding;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Autocompletado de direcciones con Photon (OpenStreetMap), sin clave.
@@ -24,6 +25,17 @@ final class GeocodingClient
 
     private const BIAS_LON = -3.7;
 
+    /*
+     * Caja que limita la búsqueda: península, Baleares, Canarias, Ceuta y
+     * Melilla, con margen para Portugal, Andorra y el sur de Francia, que son
+     * destinos plausibles de un viaje.
+     *
+     * Hace falta porque el sesgo por coordenadas de Photon es demasiado flojo.
+     * Verificado contra la API real el 09-09-2026: buscando «malaga» devolvía
+     * primero Malaga (California) y la de Andalucía en cuarto lugar.
+     */
+    private const BBOX = '-19.0,27.4,4.6,44.0';
+
     /** @return array<int, PlaceResult> */
     public function search(string $query, int $limit = 6): array
     {
@@ -33,7 +45,9 @@ final class GeocodingClient
             return [];
         }
 
-        $cacheKey = 'geocode:'.md5(mb_strtolower($query)).":{$limit}";
+        // La v2 invalida lo que se cacheó con el orden antiguo, que ponía
+        // comercios por delante de ciudades.
+        $cacheKey = 'geocode:v2:'.md5(mb_strtolower($query)).":{$limit}";
 
         if ($cached = Cache::get($cacheKey)) {
             return $this->hydrate($cached);
@@ -53,6 +67,7 @@ final class GeocodingClient
                 'lang' => 'default',
                 'lat' => self::BIAS_LAT,
                 'lon' => self::BIAS_LON,
+                'bbox' => self::BBOX,
             ]);
 
         if ($response->failed()) {
@@ -62,6 +77,10 @@ final class GeocodingClient
         }
 
         $payload = collect($response->json('features', []))
+            ->values()
+            // Se reordena antes de convertir, porque el criterio necesita los
+            // campos crudos de Photon que PlaceResult ya no lleva.
+            ->sortBy(fn (array $feature, int $position) => [$this->rank($feature, $query), $position])
             ->map(fn (array $feature) => $this->toPlace($feature))
             ->filter()
             ->map(fn (PlaceResult $place) => $place->toArray())
@@ -75,6 +94,39 @@ final class GeocodingClient
         }
 
         return $this->hydrate($payload);
+    }
+
+    /**
+     * Orden propio, de menor a mayor: gana quien se llama exactamente como lo
+     * buscado y, entre ésos, el sitio más grande.
+     *
+     * Photon ordena por su relevancia y pone un comercio por delante de una
+     * capital de provincia: buscando «malaga» salía primero «Malaga 8 Guitar»,
+     * una tienda de Madrid, y la ciudad en tercer lugar.
+     *
+     * Cuando no hay coincidencia exacta —una calle, un portal— todos empatan y
+     * se conserva el orden de Photon, que para direcciones funciona bien.
+     */
+    private function rank(array $feature, string $query): int
+    {
+        $properties = $feature['properties'] ?? [];
+
+        $exact = $this->normalize((string) ($properties['name'] ?? '')) === $this->normalize($query);
+
+        $size = match ($properties['type'] ?? '') {
+            'city' => 0,
+            'county', 'state' => 1,
+            'district', 'locality' => 2,
+            'street' => 3,
+            default => 4,   // portales, comercios y demás
+        };
+
+        return ($exact ? 0 : 10) + $size;
+    }
+
+    private function normalize(string $value): string
+    {
+        return Str::lower(Str::ascii(trim($value)));
     }
 
     /** @return array<int, PlaceResult> */
