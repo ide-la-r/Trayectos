@@ -40,14 +40,23 @@ class FuelPriceController extends Controller
         $kind = $this->selectedKind($request, $available);
         $area = FuelArea::fromArray($request->session()->get(FuelArea::SESSION_KEY));
 
+        $summary = $kind ? $history->summary($kind, area: $area) : null;
+
         return view('fuel.prices', [
             'available' => $available,
             'kind' => $kind,
             'area' => $area,
             'radii' => FuelArea::RADII,
-            'summary' => $kind ? $history->summary($kind, area: $area) : null,
+            'summary' => $summary,
             'cheapest' => $kind ? $history->cheapestStations($kind, area: $area) : collect(),
-            'provinces' => (array) config('trayectos.miteco.provinces'),
+            // Las provincias que hay de verdad, por su nombre: «29» no le dice
+            // nada a nadie y la configuración puede ir por delante del dato.
+            'provinces' => $history->syncedProvinces(),
+            // Sólo cuando la zona se ha quedado vacía: buscar la más cercana
+            // carga todas las estaciones y no hace falta si ya hay resultados.
+            'nearest' => $area && $summary?->latest === null
+                ? $history->nearestStation($area)
+                : null,
         ]);
     }
 

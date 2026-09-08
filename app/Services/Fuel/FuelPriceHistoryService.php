@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Fuel;
 
 use App\Enums\FuelKind;
+use App\Models\FuelStation;
 use App\Support\FuelArea;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -176,6 +177,48 @@ final class FuelPriceHistoryService
             });
     }
 
+    /**
+     * Qué provincias hay de verdad en la copia local, por su nombre.
+     *
+     * Se leen de los datos y no de la configuración a propósito: «29» no le
+     * dice nada a nadie, y si la configuración ha cambiado pero la
+     * sincronización todavía no ha corrido, lo que importa es lo que hay.
+     *
+     * @return Collection<int, string>
+     */
+    public function syncedProvinces(): Collection
+    {
+        return DB::table('fuel_stations')
+            ->whereNotNull('province')
+            ->distinct()
+            ->orderBy('province')
+            ->pluck('province');
+    }
+
+    /**
+     * La estación sincronizada más cercana al punto, esté donde esté.
+     *
+     * Es para cuando la zona se queda vacía: decir «prueba a ampliar el radio»
+     * cuando la más cercana está a cuatrocientos kilómetros es un consejo que
+     * no puede funcionar. Con esto se puede decir lo que pasa de verdad.
+     *
+     * Carga todas las estaciones en memoria, así que sólo se llama en ese
+     * caso; son unos miles de filas de cuatro columnas.
+     */
+    public function nearestStation(FuelArea $area): ?object
+    {
+        return FuelStation::query()
+            ->whereNotNull('lat')
+            ->whereNotNull('lon')
+            ->get(['id', 'label', 'municipality', 'province', 'lat', 'lon'])
+            ->map(fn (FuelStation $station) => (object) [
+                'station' => $station,
+                'km' => $area->distanceTo($station->lat, $station->lon),
+            ])
+            ->sortBy('km')
+            ->first();
+    }
+
     private function verdict(string $direction, int $points, ?FuelArea $area): string
     {
         if ($direction === 'up') {
@@ -194,10 +237,14 @@ final class FuelPriceHistoryService
             return 'Aún no hay días suficientes para hablar de tendencia.';
         }
 
-        // Sin datos, la causa cambia el consejo: no es lo mismo que el cron no
-        // haya corrido nunca que haber pedido un radio donde no hay nada.
+        /*
+         * Con zona no se aconseja nada aquí. Antes decía «prueba a ampliar el
+         * radio», que es un consejo imposible de seguir cuando la gasolinera
+         * sincronizada más cercana está a cuatrocientos kilómetros. El
+         * diagnóstico lo da la pantalla, que sí sabe a qué distancia está.
+         */
         return $area
-            ? 'No hay gasolineras con este carburante a menos de '.$area->radiusKm.' km. Prueba a ampliar el radio.'
+            ? 'No hay precios de este carburante en la zona elegida.'
             : 'Todavía no hay precios sincronizados de este carburante.';
     }
 }

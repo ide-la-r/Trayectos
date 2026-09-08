@@ -3,7 +3,12 @@
         ? '—'
         : number_format($milli / 1000, 3, ',', '.');
 
-    $km = fn (float $value) => number_format($value, 1, ',', '.');
+    $km = fn (float $value) => number_format($value, $value < 100 ? 1 : 0, ',', '.');
+
+    // El Ministerio las publica en mayúsculas («MÁLAGA»)
+    $provinciasCubiertas = $provinces
+        ->map(fn (string $p) => \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower($p)))
+        ->implode(', ');
 
     // El precio protagonista es el de la primera del ranking, no el mínimo del
     // día: el mínimo del día puede venir de una sincronización de esta mañana y
@@ -92,7 +97,10 @@
             </div>
 
             <div x-show="open" x-cloak class="mt-4 space-y-4 border-t border-neutral-100 pt-4">
+                {{-- Las dos formas de esta pantalla llevan botones de radio, así que
+                     cada una necesita su nombre para quien navegue por voz. --}}
                 <form method="POST" action="{{ route('prices.area') }}" x-ref="form"
+                      aria-label="Elegir la zona de búsqueda"
                       @place-chosen="fromPlace($event)" class="space-y-4">
                     @csrf
                     <input type="hidden" name="carburante" value="{{ $kind->value }}">
@@ -185,8 +193,27 @@
                     {{ $summary->verdict }}
                 </p>
 
-                @if ($area)
+                {{-- Decir a qué distancia está la más cercana convierte un callejón
+                     sin salida en un diagnóstico: si está a 400 km, el problema no
+                     es el radio sino que tu zona no se está descargando. --}}
+                @if ($nearest)
+                    <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-neutral-600">
+                        La sincronizada más cercana está a
+                        <strong class="text-neutral-900">{{ $km($nearest->km) }} km</strong>,
+                        en {{ \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower((string) $nearest->station->municipality)) }}.
+                    </p>
+                @endif
+
+                @if ($provinciasCubiertas !== '')
+                    <p class="mx-auto mt-2 max-w-md text-xs leading-relaxed text-neutral-500">
+                        Ahora mismo solo se descargan los precios de {{ $provinciasCubiertas }}.
+                    </p>
+                @endif
+
+                {{-- Los radios solo si ampliar puede servir de algo --}}
+                @if ($area && $nearest && $nearest->km <= max($radii))
                     <form method="POST" action="{{ route('prices.area') }}"
+                          aria-label="Ampliar el radio de búsqueda"
                           class="mt-4 flex flex-wrap justify-center gap-2">
                         @csrf
                         <input type="hidden" name="carburante" value="{{ $kind->value }}">
@@ -398,8 +425,8 @@
                         Precios oficiales del Ministerio para la Transición Ecológica.
                         @if ($area)
                             Sólo gasolineras a menos de {{ $area->radiusKm }} km de {{ $area->label }}.
-                        @else
-                            De las provincias sincronizadas ({{ implode(', ', $provinces) }}).
+                        @elseif ($provinciasCubiertas !== '')
+                            De {{ $provinciasCubiertas }}.
                         @endif
                         El mapa llega en la próxima entrega.
                     </p>

@@ -51,7 +51,7 @@ services:
           - key: ORS_API_KEY
             sync: false
           - key: MITECO_PROVINCES
-            value: 28,45,05,40,19
+            value: '29'
           - key: DEFAULT_KWH_PRICE
             value: 0.15
 

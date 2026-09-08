@@ -30,10 +30,12 @@ return [
 
     'miteco' => [
         'base_url' => env('MITECO_BASE_URL', 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes'),
-        // Ids de provincia del Ministerio. Lista vacía => descarga nacional completa.
+        // Ids de provincia del Ministerio. Lista vacía => descarga nacional completa,
+        // que son ~11.500 estaciones: en el plan gratuito de Neon (500 MB) eso
+        // llena la base de datos en semanas. Por defecto 29, Málaga.
         'provinces' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env('MITECO_PROVINCES', '28'))
+            explode(',', (string) env('MITECO_PROVINCES', '29'))
         ))),
         'timeout' => 120,
     ],

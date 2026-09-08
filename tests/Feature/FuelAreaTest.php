@@ -26,15 +26,16 @@ class FuelAreaTest extends TestCase
 
     private const CENTRO_LON = -4.4214;
 
-    private function estacion(string $label, float $lat, float $lon): FuelStation
+    private function estacion(string $label, float $lat, float $lon, string $municipio = 'Málaga', string $provincia = 'MÁLAGA', string $provinciaId = '29'): FuelStation
     {
         static $ideess = 5000;
 
         return FuelStation::create([
             'ideess' => $ideess++,
             'label' => $label,
-            'municipality' => 'Málaga',
-            'province_id' => '29',
+            'municipality' => $municipio,
+            'province' => $provincia,
+            'province_id' => $provinciaId,
             'lat' => $lat,
             'lon' => $lon,
         ]);
@@ -231,7 +232,9 @@ class FuelAreaTest extends TestCase
     public function test_avisa_cuando_no_hay_nada_en_el_radio(): void
     {
         $user = User::factory()->create();
-        $lejos = $this->estacion('La de Marbella', self::CENTRO_LAT - 0.5, self::CENTRO_LON);
+        // A unos 30 km: fuera del radio de 5, pero dentro del de 50, así que
+        // ampliar sí puede arreglarlo y tiene sentido ofrecerlo.
+        $lejos = $this->estacion('La de Fuengirola', self::CENTRO_LAT - 0.27, self::CENTRO_LON);
         $this->precio($lejos, 1100);
 
         $this->actingAs($user)->post(route('prices.area'), [
@@ -240,13 +243,42 @@ class FuelAreaTest extends TestCase
             'radius_km' => 5,
         ]);
 
-        // Ni un «—» suelto ni una gráfica vacía: se dice qué pasa y cómo salir
+        // Ni un «—» suelto ni una gráfica vacía: se dice qué pasa y cómo salir.
+        // Y como la más cercana está a 55 km, sí tiene sentido ofrecer radios.
         $this->actingAs($user)
             ->get(route('prices'))
             ->assertOk()
             ->assertSee('Nada de Gasóleo A a 5 km')
-            ->assertSee('Prueba a ampliar el radio')
-            ->assertDontSee('La de Marbella');
+            ->assertSee('La sincronizada más cercana está a')
+            ->assertSee('aria-label="Ampliar el radio de búsqueda"', false)
+            ->assertDontSee('La de Fuengirola');
+    }
+
+    public function test_si_lo_mas_cercano_esta_a_cientos_de_kilometros_lo_dice_en_vez_de_ofrecer_radios(): void
+    {
+        $user = User::factory()->create();
+
+        // Mostoles: es lo que salia de verdad en produccion a alguien de Malaga,
+        // porque se estaban descargando las provincias de Madrid.
+        $mostoles = $this->estacion('Repsol Mostoles', 40.3223, -3.8649, 'Móstoles', 'MADRID', '28');
+        $this->precio($mostoles, 1500);
+
+        $this->actingAs($user)->post(route('prices.area'), [
+            'lat' => self::CENTRO_LAT,
+            'lon' => self::CENTRO_LON,
+            'radius_km' => 50,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('prices'))
+            ->assertOk()
+            ->assertSee('La sincronizada más cercana está a')
+            ->assertSee('Móstoles')
+            // Se dice qué cobertura hay, con el nombre y no con el número 28
+            ->assertSee('Ahora mismo solo se descargan los precios de Madrid')
+            // Ningun radio arregla 400 km: ofrecerlos como solucion seria mentir.
+            // El panel de «Cambiar zona» sigue teniendolos, que para eso esta.
+            ->assertDontSee('aria-label="Ampliar el radio de búsqueda"', false);
     }
 
     public function test_la_zona_no_se_le_pega_a_otra_persona(): void

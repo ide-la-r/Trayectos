@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Services\Energy\ReeClient;
+use App\Services\Fuel\FuelDataPruner;
 use App\Services\Fuel\FuelPriceSynchronizer;
 use Illuminate\Console\Command;
 use Throwable;
@@ -14,11 +15,12 @@ class SyncFuelPrices extends Command
     protected $signature = 'trayectos:sync-prices
                             {--provinces= : Ids de provincia separados por comas (vacío = las de la configuración)}
                             {--all : Descarga nacional completa (~11.500 estaciones)}
+                            {--no-prune : No limpiar lo que sobra al terminar}
                             {--skip-energy : No consultar el precio eléctrico}';
 
     protected $description = 'Sincroniza precios de carburante del Ministerio y el precio eléctrico de REE';
 
-    public function handle(FuelPriceSynchronizer $synchronizer, ReeClient $ree): int
+    public function handle(FuelPriceSynchronizer $synchronizer, ReeClient $ree, FuelDataPruner $pruner): int
     {
         $provinces = match (true) {
             (bool) $this->option('all') => [],
@@ -39,6 +41,24 @@ class SyncFuelPrices extends Command
             $this->error('No se han podido sincronizar los carburantes: '.$exception->getMessage());
 
             return self::FAILURE;
+        }
+
+        /*
+         * La limpieza se salta en las ejecuciones a medida. Usa siempre la
+         * configuración, así que un «--provinces=41» de una vez borraría todo
+         * lo demás y acto seguido se borraría a sí mismo.
+         */
+        if ($provinces === null && ! $this->option('no-prune')) {
+            $pruned = $pruner->prune();
+
+            if ($pruned['stations'] || $pruned['prices']) {
+                $this->info(sprintf(
+                    'Limpieza: %d estaciones fuera de las provincias configuradas y %d precios de más de %d días.',
+                    $pruned['stations'],
+                    $pruned['prices'],
+                    FuelDataPruner::KEEP_DAYS,
+                ));
+            }
         }
 
         if (! $this->option('skip-energy')) {
