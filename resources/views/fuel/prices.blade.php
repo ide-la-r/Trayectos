@@ -417,6 +417,22 @@
                                         {{ $visto->isFuture() ? 'ahora mismo' : $visto->diffForHumans(short: true) }}
                                     </span>
                                 </p>
+
+                                {{-- Cómo llegar. Se sirve con Google Maps, que funciona en
+                                     todas partes; en aparatos de Apple lo reescribe
+                                     map-links.js a Mapas, que es lo que ahí abre solo. --}}
+                                @if ($station->lat !== null && $station->lon !== null)
+                                    <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ $station->lat }},{{ $station->lon }}&amp;travelmode=driving"
+                                       data-lat="{{ $station->lat }}" data-lon="{{ $station->lon }}"
+                                       target="_blank" rel="noopener"
+                                       title="Cómo llegar"
+                                       aria-label="Cómo llegar a {{ $station->label ?: 'esta gasolinera' }}"
+                                       class="grid size-10 shrink-0 place-items-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-900">
+                                        <svg class="size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M20.94 3.06a1 1 0 0 0-1.06-.22L3.5 9.2a1 1 0 0 0 .06 1.87l6.9 2.47 2.47 6.9a1 1 0 0 0 1.87.06l6.36-16.38a1 1 0 0 0-.22-1.06Z"/>
+                                        </svg>
+                                    </a>
+                                @endif
                             </div>
                         @endforeach
                     </div>

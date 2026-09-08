@@ -111,6 +111,19 @@ class FuelAreaTest extends TestCase
         $this->assertEqualsWithDelta(3.0, $fila->distance_km, 0.2);
     }
 
+    public function test_cada_gasolinera_lleva_su_enlace_de_como_llegar(): void
+    {
+        $this->precio($this->estacion('La de al lado', 36.7480, -4.4214), 1600);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('prices'))
+            ->assertOk()
+            // Google Maps en el HTML porque funciona en todas partes; en
+            // aparatos de Apple lo reescribe map-links.js a Mapas
+            ->assertSee('google.com/maps/dir/?api=1&amp;destination=36.748,-4.4214', false)
+            ->assertSee('aria-label="Cómo llegar a La de al lado"', false);
+    }
+
     public function test_sin_zona_el_ranking_no_habla_de_distancias(): void
     {
         $this->precio($this->estacion('Cualquiera', self::CENTRO_LAT, self::CENTRO_LON), 1600);

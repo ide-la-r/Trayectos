@@ -4,6 +4,7 @@ import tripEstimate from './trip-estimate';
 import installPrompt from './install-prompt';
 import inviteLink from './invite-link';
 import fuelArea from './fuel-area';
+import nativeMapLinks from './map-links';
 
 Alpine.data('placeField', placeField);
 Alpine.data('tripEstimate', tripEstimate);
@@ -13,6 +14,10 @@ Alpine.data('fuelArea', fuelArea);
 
 window.Alpine = Alpine;
 Alpine.start();
+
+// No es un componente de Alpine: sólo reescribe los enlaces «cómo llegar»
+// una vez, en cuanto hay HTML.
+nativeMapLinks();
 
 // El service worker sólo aporta en producción; en desarrollo estorba
 if ('serviceWorker' in navigator && !import.meta.env.DEV) {
