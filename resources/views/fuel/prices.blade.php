@@ -427,7 +427,7 @@
                                        target="_blank" rel="noopener"
                                        title="Cómo llegar"
                                        aria-label="Cómo llegar a {{ $station->label ?: 'esta gasolinera' }}"
-                                       class="grid size-10 shrink-0 place-items-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-900">
+                                       class="grid size-10 shrink-0 place-items-center rounded-lg bg-neutral-100 text-neutral-500 transition hover:bg-neutral-200 hover:text-neutral-900">
                                         <svg class="size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path d="M20.94 3.06a1 1 0 0 0-1.06-.22L3.5 9.2a1 1 0 0 0 .06 1.87l6.9 2.47 2.47 6.9a1 1 0 0 0 1.87.06l6.36-16.38a1 1 0 0 0-.22-1.06Z"/>
                                         </svg>
