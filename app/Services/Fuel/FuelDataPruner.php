@@ -19,8 +19,14 @@ use Illuminate\Support\Collection;
  */
 final class FuelDataPruner
 {
-    /** La pantalla enseña 30 días; se guardan 90 por si se quiere ampliar. */
-    public const KEEP_DAYS = 90;
+    /**
+     * La pantalla enseña 30 días; se guardan 45 para tener margen.
+     *
+     * Con Andalucía entera son unos 4,1 MB al día, así que 45 días son 184 MB
+     * de los 500 del plan gratuito. Con 90 días serían 367 MB, tres cuartas
+     * partes de la base de datos para un histórico que nadie mira.
+     */
+    public const KEEP_DAYS = 45;
 
     /** @return array{stations: int, prices: int} */
     public function prune(?array $provinceIds = null, int $keepDays = self::KEEP_DAYS): array

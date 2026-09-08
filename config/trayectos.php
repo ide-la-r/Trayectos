@@ -30,12 +30,19 @@ return [
 
     'miteco' => [
         'base_url' => env('MITECO_BASE_URL', 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes'),
-        // Ids de provincia del Ministerio. Lista vacía => descarga nacional completa,
-        // que son ~11.500 estaciones: en el plan gratuito de Neon (500 MB) eso
-        // llena la base de datos en semanas. Por defecto 29, Málaga.
+        /*
+         * Ids de provincia del Ministerio. Por defecto Andalucía entera.
+         *
+         * Lista vacía => descarga nacional. Medido contra la API real el
+         * 09-09-2026: España son 11.493 estaciones y 28.858 filas de precio
+         * por sincronización, o sea 22,6 MB al día y 677 MB en treinta días.
+         * El plan gratuito de Neon son 500 MB en total, así que no cabe.
+         * Andalucía son 2.120 estaciones y 4,1 MB al día: 184 MB con los 45
+         * días que se guardan. Sólo Málaga serían 308 estaciones y 0,6 MB.
+         */
         'provinces' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env('MITECO_PROVINCES', '29'))
+            explode(',', (string) env('MITECO_PROVINCES', '04,11,14,18,21,23,29,41'))
         ))),
         'timeout' => 120,
     ],
