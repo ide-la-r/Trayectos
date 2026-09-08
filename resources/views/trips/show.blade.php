@@ -53,6 +53,15 @@
         </dl>
     </section>
 
+        {{-- ─── Perfil del recorrido ──────────────────────────────────────────
+         Va justo debajo del coste porque es lo que explica el «por el
+         desnivel» de ahí arriba: se ve de dónde sale ese porcentaje. --}}
+    @if ($profile)
+        <section class="card mb-4">
+            <x-route-profile :profile="$profile" />
+        </section>
+    @endif
+
     {{-- ─── Reparto ───────────────────────────────────────────────────────── --}}
     <section class="mb-4">
         <h2 class="mb-2 px-1 text-sm font-semibold text-neutral-900">Cómo se ha repartido</h2>

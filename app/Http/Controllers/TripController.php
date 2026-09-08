@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\Trip;
 use App\Models\Vehicle;
 use App\Services\Ledger\LedgerService;
+use App\Services\Trips\RouteProfiler;
 use App\Services\Trips\TripDraft;
 use App\Services\Trips\TripRecorder;
 use Illuminate\Http\RedirectResponse;
@@ -74,7 +75,7 @@ class TripController extends Controller
             ->with('status', 'Viaje apuntado y repartido.');
     }
 
-    public function show(Request $request, Group $group, Trip $trip): View
+    public function show(Request $request, Group $group, Trip $trip, RouteProfiler $profiler): View
     {
         abort_unless($trip->group_id === $group->id, 404);
 
@@ -82,6 +83,9 @@ class TripController extends Controller
             'group' => $group,
             'member' => $request->attributes->get('group_member'),
             'trip' => $trip->load(['vehicle', 'driver.user', 'passengers.member.user', 'journalEntry.lines.member.user']),
+            // Null cuando la ruta se estimó en línea recta: entonces hay
+            // desnivel pero no recorrido que dibujar.
+            'profile' => $profiler->profileFor($trip),
         ]);
     }
 
