@@ -42,7 +42,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/panel', DashboardController::class)->name('dashboard');
 
     // Precios de carburante de la zona: histórico y dónde está más barato
-    Route::get('/precios', FuelPriceController::class)->name('prices');
+    Route::get('/precios', [FuelPriceController::class, 'index'])->name('prices');
+    Route::post('/precios/zona', [FuelPriceController::class, 'updateArea'])->name('prices.area');
 
     // ─── Grupos ────────────────────────────────────────────────────────────
     Route::get('/grupos/crear', [GroupController::class, 'create'])->name('groups.create');

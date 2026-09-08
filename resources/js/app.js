@@ -3,11 +3,13 @@ import placeField from './place-field';
 import tripEstimate from './trip-estimate';
 import installPrompt from './install-prompt';
 import inviteLink from './invite-link';
+import fuelArea from './fuel-area';
 
 Alpine.data('placeField', placeField);
 Alpine.data('tripEstimate', tripEstimate);
 Alpine.data('installPrompt', installPrompt);
 Alpine.data('inviteLink', inviteLink);
+Alpine.data('fuelArea', fuelArea);
 
 window.Alpine = Alpine;
 Alpine.start();

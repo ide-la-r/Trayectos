@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Fuel;
 
 use App\Enums\FuelKind;
+use App\Support\FuelArea;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,9 @@ use Illuminate\Support\Facades\DB;
  * sincronización del cron viene acumulando una serie temporal desde el primer
  * despliegue. Lo único que faltaba era mirarla.
  *
- * El ámbito son las estaciones sincronizadas, que por construcción son las de
- * las provincias configuradas en MITECO_PROVINCES: preguntar por «mi zona» no
- * necesita geolocalización porque la copia local ya es la zona.
+ * Todo acepta una zona opcional. Sin ella el ámbito son las provincias
+ * configuradas en MITECO_PROVINCES, que puede ser media comunidad; con ella,
+ * las gasolineras que de verdad le pillan de camino a quien pregunta.
  */
 final class FuelPriceHistoryService
 {
@@ -28,7 +29,7 @@ final class FuelPriceHistoryService
      *
      * @return Collection<int, object{day: string, min_milli: int, avg_milli: int, stations: int}>
      */
-    public function dailySeries(FuelKind $kind, int $days = 30): Collection
+    public function dailySeries(FuelKind $kind, int $days = 30, ?FuelArea $area = null): Collection
     {
         /*
          * Se agrupa por observed_at —una columna, portable— y el paso a días se
@@ -43,6 +44,7 @@ final class FuelPriceHistoryService
         $batches = DB::table('fuel_prices')
             ->where('fuel_kind', $kind->value)
             ->where('observed_at', '>=', now()->subDays($days))
+            ->when($area, fn ($query) => $query->whereIn('fuel_station_id', $area->stationIds()))
             ->groupBy('observed_at')
             ->orderBy('observed_at')
             ->select(
@@ -78,6 +80,7 @@ final class FuelPriceHistoryService
      * @return object{
      *     kind: FuelKind,
      *     days: int,
+     *     area: ?FuelArea,
      *     latest: ?object,
      *     min_milli: ?int,
      *     avg_milli: ?int,
@@ -88,9 +91,9 @@ final class FuelPriceHistoryService
      *     series: Collection
      * }
      */
-    public function summary(FuelKind $kind, int $days = 30): object
+    public function summary(FuelKind $kind, int $days = 30, ?FuelArea $area = null): object
     {
-        $series = $this->dailySeries($kind, $days);
+        $series = $this->dailySeries($kind, $days, $area);
         $latest = $series->last();
         $first = $series->first();
 
@@ -115,13 +118,14 @@ final class FuelPriceHistoryService
         return (object) [
             'kind' => $kind,
             'days' => $days,
+            'area' => $area,
             'latest' => $latest,
             'min_milli' => $latest?->min_milli,
             'avg_milli' => $latest?->avg_milli,
             'change_milli' => $change,
             'change_pct' => $pct,
             'direction' => $direction,
-            'verdict' => $this->verdict($direction, $series->count()),
+            'verdict' => $this->verdict($direction, $series->count(), $area),
             'series' => $series,
         ];
     }
@@ -129,14 +133,18 @@ final class FuelPriceHistoryService
     /**
      * Las estaciones más baratas ahora mismo, con su última observación.
      *
+     * Cuando hay zona, cada fila lleva además la distancia real hasta el punto
+     * elegido: es lo que convierte un ranking de precios en algo accionable.
+     *
      * @return Collection<int, object>
      */
-    public function cheapestStations(FuelKind $kind, int $limit = 5): Collection
+    public function cheapestStations(FuelKind $kind, int $limit = 5, ?FuelArea $area = null): Collection
     {
         // Sólo la última observación de cada estación: sin esto, una gasolinera
         // aparecería tantas veces como veces se haya sincronizado.
         $latest = DB::table('fuel_prices')
             ->where('fuel_kind', $kind->value)
+            ->when($area, fn ($query) => $query->whereIn('fuel_station_id', $area->stationIds()))
             ->groupBy('fuel_station_id')
             ->select('fuel_station_id', DB::raw('MAX(observed_at) AS observed_at'));
 
@@ -159,18 +167,37 @@ final class FuelPriceHistoryService
                 'fuel_prices.price_milli',
                 'fuel_prices.observed_at',
             )
-            ->get();
+            ->get()
+            ->map(function (object $row) use ($area): object {
+                $distance = $area?->distanceTo($row->lat, $row->lon);
+                $row->distance_km = $distance === null ? null : round($distance, 1);
+
+                return $row;
+            });
     }
 
-    private function verdict(string $direction, int $points): string
+    private function verdict(string $direction, int $points, ?FuelArea $area): string
     {
-        return match ($direction) {
-            'up' => 'Va subiendo: si te hace falta, mejor llenar hoy.',
-            'down' => 'Va bajando: si puedes esperar, esperando ganas.',
-            'flat' => 'Estable: llena cuando te venga bien.',
-            default => $points === 0
-                ? 'Todavía no hay precios sincronizados de este carburante.'
-                : 'Aún no hay días suficientes para hablar de tendencia.',
-        };
+        if ($direction === 'up') {
+            return 'Va subiendo: si te hace falta, mejor llenar hoy.';
+        }
+
+        if ($direction === 'down') {
+            return 'Va bajando: si puedes esperar, esperando ganas.';
+        }
+
+        if ($direction === 'flat') {
+            return 'Estable: llena cuando te venga bien.';
+        }
+
+        if ($points > 0) {
+            return 'Aún no hay días suficientes para hablar de tendencia.';
+        }
+
+        // Sin datos, la causa cambia el consejo: no es lo mismo que el cron no
+        // haya corrido nunca que haber pedido un radio donde no hay nada.
+        return $area
+            ? 'No hay gasolineras con este carburante a menos de '.$area->radiusKm.' km. Prueba a ampliar el radio.'
+            : 'Todavía no hay precios sincronizados de este carburante.';
     }
 }

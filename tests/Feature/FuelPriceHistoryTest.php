@@ -188,6 +188,30 @@ class FuelPriceHistoryTest extends TestCase
             ->assertSee('Sube');
     }
 
+    public function test_el_numero_grande_es_un_precio_al_que_se_puede_ir(): void
+    {
+        $a = $this->estacion(['label' => 'Subio luego']);
+        $b = $this->estacion(['label' => 'La barata de ahora']);
+
+        foreach ([4, 3] as $dias) {
+            $this->precio($a, 1500, now()->subDays($dias)->setTime(18, 0)->toDateTimeString());
+            $this->precio($b, 1520, now()->subDays($dias)->setTime(18, 0)->toDateTimeString());
+        }
+
+        // Esta mañana estuvo a 1,400, pero por la tarde ya no: el mínimo del día
+        // no está en ninguna gasolinera ahora mismo y no puede ser el titular.
+        $this->precio($a, 1400, now()->subDay()->setTime(6, 0)->toDateTimeString());
+        $this->precio($a, 1600, now()->subDay()->setTime(18, 0)->toDateTimeString());
+        $this->precio($b, 1550, now()->subDay()->setTime(18, 0)->toDateTimeString());
+
+        // El orden importa: si el titular volviera a ser el mínimo del día, el
+        // 1,550 sólo aparecería en el ranking —después de «Media»— y esto falla.
+        $this->actingAs(User::factory()->create())
+            ->get(route('prices'))
+            ->assertOk()
+            ->assertSeeInOrder(['Más barato en tu zona', '1,550', 'Media']);
+    }
+
     public function test_la_pantalla_avisa_cuando_no_hay_datos(): void
     {
         $this->actingAs(User::factory()->create())

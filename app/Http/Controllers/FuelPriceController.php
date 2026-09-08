@@ -6,24 +6,30 @@ namespace App\Http\Controllers;
 
 use App\Enums\FuelKind;
 use App\Services\Fuel\FuelPriceHistoryService;
+use App\Support\FuelArea;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
- * Precios de carburante de la zona sincronizada: cuánto está hoy, cómo viene
- * moviéndose y dónde está más barato.
+ * Precios de carburante de la zona: cuánto está hoy, cómo viene moviéndose y
+ * dónde está más barato.
  *
  * Los datos ya estaban: el cron los sincroniza cuatro veces al día desde el
  * primer despliegue y fuel_prices guarda cada observación. Esta pantalla es
- * sólo mirarlos.
+ * sólo mirarlos, acotados al sitio donde quien pregunta va a repostar.
  */
 class FuelPriceController extends Controller
 {
-    public function __invoke(Request $request, FuelPriceHistoryService $history): View
+    public function index(Request $request, FuelPriceHistoryService $history): View
     {
-        // Sólo los carburantes de los que hay precios de verdad: ofrecer una
-        // pestaña vacía es prometer un dato que no existe.
+        /*
+         * Los carburantes disponibles se calculan sin la zona a propósito: si
+         * dependieran de ella, las pestañas aparecerían y desaparecerían al
+         * cambiar el radio. Es más claro dejarlas fijas y explicar después que
+         * de ése no hay nada cerca.
+         */
         $available = DB::table('fuel_prices')
             ->distinct()
             ->pluck('fuel_kind')
@@ -32,14 +38,57 @@ class FuelPriceController extends Controller
             ->values();
 
         $kind = $this->selectedKind($request, $available);
+        $area = FuelArea::fromArray($request->session()->get(FuelArea::SESSION_KEY));
 
         return view('fuel.prices', [
             'available' => $available,
             'kind' => $kind,
-            'summary' => $kind ? $history->summary($kind) : null,
-            'cheapest' => $kind ? $history->cheapestStations($kind) : collect(),
+            'area' => $area,
+            'radii' => FuelArea::RADII,
+            'summary' => $kind ? $history->summary($kind, area: $area) : null,
+            'cheapest' => $kind ? $history->cheapestStations($kind, area: $area) : collect(),
             'provinces' => (array) config('trayectos.miteco.provinces'),
         ]);
+    }
+
+    /**
+     * Elegir la zona, cambiarle el radio o quitarla.
+     *
+     * Las coordenadas viajan en el cuerpo de un POST y no en la URL: la
+     * ubicación de una persona no tiene por qué acabar en el historial del
+     * navegador ni en los registros del servidor.
+     */
+    public function updateArea(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lon' => ['nullable', 'numeric', 'between:-180,180'],
+            'label' => ['nullable', 'string', 'max:120'],
+            'radius_km' => ['nullable', 'integer'],
+            'carburante' => ['nullable', 'string', 'max:16'],
+        ]);
+
+        $session = $request->session();
+        $current = FuelArea::fromArray($session->get(FuelArea::SESSION_KEY));
+
+        if ($request->boolean('clear')) {
+            $session->forget(FuelArea::SESSION_KEY);
+        } elseif (isset($data['lat'], $data['lon'])) {
+            $session->put(FuelArea::SESSION_KEY, (new FuelArea(
+                lat: FuelArea::roundCoordinate((float) $data['lat']),
+                lon: FuelArea::roundCoordinate((float) $data['lon']),
+                radiusKm: isset($data['radius_km']) ? (int) $data['radius_km'] : $current?->radiusKm,
+                label: $data['label'] ?? null,
+            ))->toArray());
+        } elseif ($current && isset($data['radius_km'])) {
+            // Cambiar sólo el radio conserva el punto: es el caso de pulsar
+            // «50 km» cuando en 10 no salía nada.
+            $session->put(FuelArea::SESSION_KEY, $current->withRadius((int) $data['radius_km'])->toArray());
+        }
+
+        return redirect()->route('prices', array_filter([
+            'carburante' => $data['carburante'] ?? null,
+        ]));
     }
 
     /**

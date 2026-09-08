@@ -59,6 +59,6 @@ export default (config = {}) => ({
         this.results = [];
 
         clearTimeout(this.timer);
-        this.$dispatch('place-chosen', { field: config.name, lat: place.lat, lon: place.lon });
+        this.$dispatch('place-chosen', { field: config.name, lat: place.lat, lon: place.lon, label: this.query });
     },
 });

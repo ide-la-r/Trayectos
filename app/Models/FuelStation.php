@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\Geo;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -47,13 +48,6 @@ class FuelStation extends Model
 
     public function distanceKmTo(float $lat, float $lon): float
     {
-        $earthRadius = 6371.0;
-        $dLat = deg2rad($lat - $this->lat);
-        $dLon = deg2rad($lon - $this->lon);
-
-        $a = sin($dLat / 2) ** 2
-            + cos(deg2rad($this->lat)) * cos(deg2rad($lat)) * sin($dLon / 2) ** 2;
-
-        return $earthRadius * 2 * asin(min(1.0, sqrt($a)));
+        return Geo::haversineKm($this->lat, $this->lon, $lat, $lon);
     }
 }

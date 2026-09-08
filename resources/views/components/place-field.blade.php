@@ -1,4 +1,14 @@
-@props(['name', 'label', 'value' => null, 'lat' => null, 'lon' => null, 'placeholder' => ''])
+@props([
+    'name',
+    'label',
+    'value' => null,
+    'lat' => null,
+    'lon' => null,
+    'placeholder' => '',
+    // En un viaje el sitio es obligatorio; eligiendo zona de precios, no.
+    'required' => true,
+    'hint' => 'Elige una opción de la lista para calcular la ruta, o escribe los kilómetros a mano más abajo.',
+])
 
 {{--
     Buscador de lugares. Las coordenadas se guardan en campos ocultos: si el
@@ -10,7 +20,7 @@
     <label class="label" for="{{ $name }}_label">{{ $label }}</label>
 
     <input id="{{ $name }}_label" name="{{ $name }}_label" type="text" class="field"
-           required autocomplete="off" placeholder="{{ $placeholder }}"
+           @required($required) autocomplete="off" placeholder="{{ $placeholder }}"
            x-model="query" @focus="open = results.length > 0" @keydown.escape="open = false">
 
     <input type="hidden" name="{{ $name }}_lat" :value="lat">
@@ -32,6 +42,6 @@
     </ul>
 
     <p x-show="! lat && query.length > 2" x-cloak class="mt-1 text-xs text-neutral-500">
-        Elige una opción de la lista para calcular la ruta, o escribe los kilómetros a mano más abajo.
+        {{ $hint }}
     </p>
 </div>
