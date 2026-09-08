@@ -39,7 +39,7 @@ class GroupController extends Controller
         ]);
 
         return redirect()->route('groups.show', $group)
-            ->with('status', "Grupo creado. Comparte el enlace de invitación con los demás, abajo de esta pantalla.");
+            ->with('status', 'Grupo creado. Comparte el enlace de invitación con los demás, abajo de esta pantalla.');
     }
 
     public function joinForm(): View

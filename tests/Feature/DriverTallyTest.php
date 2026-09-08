@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Drivers\DriverTallyService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class DriverTallyTest extends TestCase
@@ -78,7 +79,7 @@ class DriverTallyTest extends TestCase
         ], $extra));
     }
 
-    private function tally(): \Illuminate\Support\Collection
+    private function tally(): Collection
     {
         return app(DriverTallyService::class)->forGroup($this->group);
     }
