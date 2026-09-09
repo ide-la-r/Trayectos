@@ -235,63 +235,88 @@ export default (config = {}) => ({
      */
     badge(brand, logo = null) {
         const ratio = 2;
-        const side = 30 * ratio;
-        const inset = 2 * ratio;
+        const w = 32 * ratio;          // cuerpo
+        const body = 30 * ratio;
+        const tip = 7 * ratio;         // pico que señala el sitio exacto
+        const h = body + tip;
+        const pad = 3 * ratio;
 
         const canvas = document.createElement('canvas');
-        canvas.width = side;
-        canvas.height = side;
+        canvas.width = w;
+        canvas.height = h;
 
         const ctx = canvas.getContext('2d');
 
-        ctx.beginPath();
+        /*
+         * Un cartel con pico abajo y no un cuadrado suelto: el pico señala la
+         * gasolinera y la sombra lo despega del mapa. Es lo que hace que se lea
+         * como un marcador y no como un cuadro de color puesto ahí.
+         */
+        const r = 8 * ratio;
+        const left = pad;
+        const right = w - pad;
+        const top = pad;
+        const bottom = body - pad;
+        const mid = w / 2;
 
-        if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(inset, inset, side - inset * 2, side - inset * 2, 8 * ratio);
-        } else {
-            // Safari antiguo no tiene roundRect; un cuadrado se lee igual
-            ctx.rect(inset, inset, side - inset * 2, side - inset * 2);
-        }
+        ctx.beginPath();
+        ctx.moveTo(left + r, top);
+        ctx.lineTo(right - r, top);
+        ctx.quadraticCurveTo(right, top, right, top + r);
+        ctx.lineTo(right, bottom - r);
+        ctx.quadraticCurveTo(right, bottom, right - r, bottom);
+        ctx.lineTo(mid + tip * 0.7, bottom);
+        ctx.lineTo(mid, h - pad);
+        ctx.lineTo(mid - tip * 0.7, bottom);
+        ctx.lineTo(left + r, bottom);
+        ctx.quadraticCurveTo(left, bottom, left, bottom - r);
+        ctx.lineTo(left, top + r);
+        ctx.quadraticCurveTo(left, top, left + r, top);
+        ctx.closePath();
+
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+        ctx.shadowBlur = 3 * ratio;
+        ctx.shadowOffsetY = 1 * ratio;
 
         // Con logotipo el fondo va blanco: un logotipo puede ser de cualquier
         // color y sobre el color de la marca podría no verse.
         ctx.fillStyle = logo ? '#ffffff' : brand.bg;
         ctx.fill();
 
-        // El borde es lo que mantiene la insignia legible sobre cualquier parte
-        // del mapa, igual que el halo del precio.
-        ctx.lineWidth = 2 * ratio;
-        ctx.strokeStyle = logo ? brand.bg : '#ffffff';
+        // Se quita la sombra antes del borde y del contenido, que si no la
+        // heredan y sale todo emborronado.
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+
+        ctx.lineWidth = 1.5 * ratio;
+        ctx.strokeStyle = logo ? brand.bg : 'rgba(255, 255, 255, 0.9)';
         ctx.stroke();
+
+        const cx = mid;
+        const cy = (top + bottom) / 2;
 
         if (logo) {
             // Encajado sin deformarlo. Un SVG sin tamaño propio declara 0, y de
             // ahí el respaldo.
-            const pad = 4 * ratio;
-            const box = side - inset * 2 - pad * 2;
-            const width = logo.naturalWidth || logo.width || box;
-            const height = logo.naturalHeight || logo.height || box;
-            const scale = Math.min(box / width, box / height);
+            const box = bottom - top - 4 * ratio;
+            const iw = logo.naturalWidth || logo.width || box;
+            const ih = logo.naturalHeight || logo.height || box;
+            const scale = Math.min(box / iw, box / ih);
 
-            ctx.drawImage(
-                logo,
-                (side - width * scale) / 2,
-                (side - height * scale) / 2,
-                width * scale,
-                height * scale,
-            );
+            ctx.drawImage(logo, cx - (iw * scale) / 2, cy - (ih * scale) / 2, iw * scale, ih * scale);
         } else {
             ctx.fillStyle = brand.ink;
             ctx.font = `700 ${(brand.short.length > 2 ? 10 : 13) * ratio}px system-ui, -apple-system, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(brand.short, side / 2, side / 2 + ratio);
+            ctx.fillText(brand.short, cx, cy + ratio * 0.5);
         }
 
         return {
-            width: side,
-            height: side,
-            data: ctx.getImageData(0, 0, side, side).data,
+            width: w,
+            height: h,
+            data: ctx.getImageData(0, 0, w, h).data,
         };
     },
 
