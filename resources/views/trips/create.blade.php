@@ -6,15 +6,18 @@
 
             {{-- ─── Quién y cuándo ───────────────────────────────────────── --}}
             <section class="card space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
+                {{-- Una columna en movil. En dos, el campo de fecha nativo no baja
+                     de su ancho intrinseco —los items de un grid no encogen por
+                     defecto— y se metia por encima del conductor. --}}
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="min-w-0">
                         <label class="label" for="travelled_on">Fecha</label>
                         <input id="travelled_on" name="travelled_on" type="date" class="field" required
                                max="{{ now()->toDateString() }}"
                                value="{{ old('travelled_on', now()->toDateString()) }}">
                     </div>
 
-                    <div>
+                    <div class="min-w-0">
                         <label class="label" for="driver_member_id">Conductor</label>
                         <select id="driver_member_id" name="driver_member_id" class="field" required>
                             @foreach ($members as $option)
