@@ -5,10 +5,11 @@
 
     $km = fn (float $value) => number_format($value, $value < 100 ? 1 : 0, ',', '.');
 
-    // El Ministerio las publica en mayúsculas («MÁLAGA»)
+    // El Ministerio las publica en mayúsculas («MÁLAGA»). Van con «y» al final:
+    // son nueve nombres y una lista de comas seguidas no se acaba nunca.
     $provinciasCubiertas = $provinces
         ->map(fn (string $p) => \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower($p)))
-        ->implode(', ');
+        ->join(', ', ' y ');
 
     // El precio protagonista es el de la primera del ranking, no el mínimo del
     // día: el mínimo del día puede venir de una sincronización de esta mañana y

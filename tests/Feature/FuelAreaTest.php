@@ -198,7 +198,7 @@ class FuelAreaTest extends TestCase
             $this->precio($this->estacion('Gasolinera '.$i, self::CENTRO_LAT + $i * 0.005, self::CENTRO_LON), 1500 + $i);
         }
 
-        // Sin zona no se manda nada: serían las 2.120 estaciones de Andalucía
+        // Sin zona no se manda nada: serían las 3.016 estaciones sincronizadas
         $this->actingAs($user)
             ->get(route('prices'))
             ->assertOk()
@@ -363,8 +363,8 @@ class FuelAreaTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Mostoles: es lo que salia de verdad en produccion a alguien de Malaga,
-        // porque se estaban descargando las provincias de Madrid.
+        // Mostoles: Madrid se sincroniza a proposito desde que hay gente alli, asi
+        // que a alguien de Malaga le sale de verdad como lo mas cercano que hay.
         $mostoles = $this->estacion('Repsol Mostoles', 40.3223, -3.8649, 'Móstoles', 'MADRID', '28');
         $this->precio($mostoles, 1500);
 
@@ -384,6 +384,24 @@ class FuelAreaTest extends TestCase
             // Ningun radio arregla 400 km: ofrecerlos como solucion seria mentir.
             // El panel de «Cambiar zona» sigue teniendolos, que para eso esta.
             ->assertDontSee('aria-label="Ampliar el radio de búsqueda"', false);
+    }
+
+    public function test_la_lista_de_provincias_se_lee_como_una_frase(): void
+    {
+        $user = User::factory()->create();
+
+        /*
+         * Son nueve provincias sincronizadas: una fila de comas sin la «y» del
+         * final no se acaba nunca, parece que la frase se ha cortado.
+         */
+        $this->precio($this->estacion('Repsol Mostoles', 40.3223, -3.8649, 'Móstoles', 'MADRID', '28'), 1500);
+        $this->precio($this->estacion('Repsol Teatinos', self::CENTRO_LAT, self::CENTRO_LON), 1500);
+
+        // Sin zona elegida, que es cuando la pantalla dice de dónde son
+        $this->actingAs($user)
+            ->get(route('prices'))
+            ->assertOk()
+            ->assertSee('De Madrid y Málaga.');
     }
 
     public function test_la_zona_no_se_le_pega_a_otra_persona(): void

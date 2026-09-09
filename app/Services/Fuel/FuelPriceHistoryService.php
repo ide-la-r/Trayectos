@@ -181,8 +181,8 @@ final class FuelPriceHistoryService
     /**
      * Las gasolineras de la zona, listas para pintarlas en el mapa.
      *
-     * Sólo con zona: sin ella el ámbito son las provincias sincronizadas —2.120
-     * estaciones en Andalucía— y eso no es un mapa, es una mancha; además serían
+     * Sólo con zona: sin ella el ámbito son las provincias sincronizadas —tres
+     * mil estaciones— y eso no es un mapa, es una mancha; además serían
      * cientos de kilobytes viajando con la página para nada.
      *
      * @return Collection<int, object>
