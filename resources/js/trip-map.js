@@ -10,18 +10,7 @@
  * Si falla —sin cobertura, el servicio caído— se dice y ya está: la pantalla
  * sigue entera sin él.
  */
-/*
- * MapLibre busca su worker en tiempo de ejecución, componiendo la ruta con
- * import.meta.url del propio paquete. Empaquetado con Vite ese fichero no
- * existe al lado del chunk, así que daba 404 y el mapa se quedaba en blanco
- * sin decir nada: el canvas se creaba, pero el evento «load» no llegaba nunca
- * porque sin worker no hay quien procese las teselas. El único rastro era un
- * «An unknown error occurred when fetching the script» en la consola.
- *
- * Con «?worker&url» lo empaqueta Vite —resolviendo sus propias importaciones—
- * y aquí sólo hay que pasarle la dirección buena.
- */
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+import loadMaplibre, { MAP_STYLE } from './maplibre-loader';
 
 export default (config = {}) => ({
     visible: false,
@@ -44,18 +33,7 @@ export default (config = {}) => ({
         await this.$nextTick();
 
         try {
-            /*
-             * Importaciones por nombre. MapLibre 6 NO tiene export por defecto:
-             * pedirlo dejaba maplibregl en undefined y, peor, hacia que Rollup
-             * se llevara la libreria entera por tree-shaking. El unico sintoma
-             * era un trozo de 0,5 kB en el build y un boton que no hacia nada.
-             */
-            const [{ Map, Marker, NavigationControl, LngLatBounds, setWorkerUrl }] = await Promise.all([
-                import('maplibre-gl'),
-                import('maplibre-gl/dist/maplibre-gl.css'),
-            ]);
-
-            setWorkerUrl(workerUrl);
+            const { Map, Marker, NavigationControl, LngLatBounds } = await loadMaplibre();
 
             this.draw({ Map, Marker, NavigationControl, LngLatBounds });
             this.loaded = true;
@@ -78,9 +56,7 @@ export default (config = {}) => ({
 
         const map = new Map({
             container: this.$refs.canvas,
-            // Estilo apagado a proposito: el protagonista es la linea del
-            // recorrido, no los rotulos de las calles.
-            style: 'https://tiles.openfreemap.org/styles/positron',
+            style: MAP_STYLE,
             bounds,
             fitBoundsOptions: { padding: 32 },
         });
