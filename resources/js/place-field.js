@@ -12,20 +12,31 @@ export default (config = {}) => ({
     loading: false,
     timer: null,
 
-    init() {
-        this.$watch('query', () => this.schedule());
-    },
-
-    schedule() {
+    /**
+     * Al escribir a mano se invalidan las coordenadas: hay que volver a elegir.
+     *
+     * Cuelga del evento «input» y NO de un $watch sobre el texto. Con el $watch
+     * estaba roto de una forma difícil de ver: elegir un sitio de la lista
+     * cambia el texto, así que el vigilante se disparaba —en el microtask
+     * siguiente, ya fuera de choose()— y borraba las coordenadas que se
+     * acababan de guardar. El formulario contestaba «elige origen y destino del
+     * buscador» con el origen y el destino puestos, y no había forma de apuntar
+     * un viaje sin escribir los kilómetros a mano.
+     *
+     * Con «input» sólo cuenta lo que teclea una persona: cambiar el valor desde
+     * el código no dispara ese evento, que es justo la diferencia que hacía
+     * falta.
+     */
+    onInput(value) {
         clearTimeout(this.timer);
 
-        // Al escribir a mano se invalidan las coordenadas: hay que volver a elegir
         this.lat = null;
         this.lon = null;
 
-        if (this.query.trim().length < 3) {
+        if (value.trim().length < 3) {
             this.results = [];
             this.open = false;
+
             return;
         }
 

@@ -21,7 +21,8 @@
 
     <input id="{{ $name }}_label" name="{{ $name }}_label" type="text" class="field"
            @required($required) autocomplete="off" placeholder="{{ $placeholder }}"
-           x-model="query" @focus="open = results.length > 0" @keydown.escape="open = false">
+           x-model="query" @input="onInput($event.target.value)"
+           @focus="open = results.length > 0" @keydown.escape="open = false">
 
     <input type="hidden" name="{{ $name }}_lat" :value="lat">
     <input type="hidden" name="{{ $name }}_lon" :value="lon">
