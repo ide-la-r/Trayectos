@@ -28,6 +28,9 @@ Instalable en el móvil como aplicación (PWA), también en iOS y sin pasar por 
   tiene coche con plazas suficientes y desempatando por turnos recientes.
 - **Consumo real medido de lleno a lleno**: con el cuentakilómetros de cada llenado sale lo que gasta
   el coche de verdad, sin fiarse de la ficha ni del modelo, y con eso se calibra el cálculo.
+- **Los viajes de siempre**: los trayectos que el grupo repite salen solos en la pantalla de apuntar,
+  deducidos del histórico. No hay plantillas que crear ni mantener, y repetir uno deja el formulario
+  escrito —coche, gente y sitios— para confirmar la fecha y poco más.
 
 ## Documentación
 

@@ -176,8 +176,13 @@
         </section>
     @endif
 
+    {{-- Lleva al formulario relleno, no apunta nada --}}
+    <a href="{{ route('trips.repeat', [$group, $trip]) }}" class="btn-secondary mt-4 w-full">
+        Volver a hacer este viaje
+    </a>
+
     @if ($trip->journalEntry && ! $reversed)
-        <form method="POST" action="{{ route('trips.cancel', [$group, $trip]) }}"
+        <form method="POST" action="{{ route('trips.cancel', [$group, $trip]) }}" class="mt-3"
               onsubmit="return confirm('¿Anular este viaje? El libro conservará el asiento original y su contrario.')">
             @csrf
             <button type="submit" class="btn-danger w-full">Anular este viaje</button>

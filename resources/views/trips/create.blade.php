@@ -1,4 +1,44 @@
 <x-layouts.app title="Apuntar viaje" heading="Apuntar viaje" :subheading="$group->name" :group="$group">
+    {{-- ─── Los de siempre ──────────────────────────────────────────────────
+         Rellenan el formulario de abajo con un viaje que ya se hizo. No apuntan
+         nada: sigue habiendo que mirar la fecha y darle a guardar. --}}
+    @if ($frequent->isNotEmpty())
+        <section class="mb-4">
+            <h2 class="mb-2 px-1 text-xs font-medium tracking-wide text-neutral-500 uppercase">
+                Los de siempre
+            </h2>
+
+            <div class="card divide-y divide-neutral-100 p-0">
+                @foreach ($frequent as $usual)
+                    <a href="{{ route('trips.repeat', [$group, $usual->trip]) }}"
+                       class="flex items-center gap-3 px-4 py-3 transition hover:bg-neutral-50">
+                        <span class="grid size-9 shrink-0 place-items-center rounded-full bg-neutral-100 text-neutral-500">
+                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.8"
+                                 viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M16.023 9.348h4.992V4.356M3.5 14.652h4.992v4.992M4.031 9.349a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m-18 5.407 3.181 3.182a8.25 8.25 0 0 0 13.803-3.7"/>
+                            </svg>
+                        </span>
+
+                        <span class="min-w-0 flex-1">
+                            <span class="block truncate text-sm font-medium text-neutral-900">
+                                {{ $usual->trip->origin_label }} → {{ $usual->trip->destination_label }}
+                            </span>
+                            <span class="block truncate text-xs text-neutral-500">
+                                {{ $usual->times }} veces{{ $usual->trip->round_trip ? ' · ida y vuelta' : '' }}
+                                @if ($usual->trip->vehicle)
+                                    · {{ $usual->trip->vehicle->label }}
+                                @endif
+                            </span>
+                        </span>
+
+                        <span class="shrink-0 text-xs font-medium text-neutral-500">Repetir</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <div x-data="tripEstimate({ groupId: {{ $group->id }} })">
         <form method="POST" action="{{ route('trips.store', $group) }}" x-ref="form"
               @change="schedule()" @input.debounce.700ms="schedule()" class="space-y-4">

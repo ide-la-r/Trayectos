@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\Trip;
 use App\Models\Vehicle;
 use App\Services\Ledger\LedgerService;
+use App\Services\Trips\FrequentTrips;
 use App\Services\Trips\RouteProfiler;
 use App\Services\Trips\TripDraft;
 use App\Services\Trips\TripRecorder;
@@ -19,14 +20,109 @@ use Illuminate\View\View;
 
 class TripController extends Controller
 {
-    public function create(Request $request, Group $group): View
+    public function create(Request $request, Group $group, FrequentTrips $frequent): View
     {
         return view('trips.create', [
             'group' => $group,
             'member' => $request->attributes->get('group_member'),
             'members' => $group->activeMembers()->with('user')->get(),
             'vehicles' => $this->availableVehicles($group),
+            // Los que este grupo repite, para no rellenarlos otra vez a mano
+            'frequent' => $frequent->forGroup($group),
         ]);
+    }
+
+    /**
+     * Volver a apuntar un viaje que ya se hizo.
+     *
+     * No se crea nada: se rellena el formulario con lo de aquel viaje y se
+     * redirige a él, así que sigue habiendo una confirmación de por medio.
+     * Apuntar un viaje mueve dinero en el libro, y eso no puede pasar de un
+     * clic sin que nadie mire la fecha ni quién iba.
+     *
+     * El relleno viaja por la bolsa de «entrada anterior», que es la que el
+     * formulario ya lee con old(): así no hay dos caminos distintos para
+     * rellenar los mismos campos.
+     */
+    public function repeat(Request $request, Group $group, Trip $trip): RedirectResponse
+    {
+        abort_unless($trip->group_id === $group->id, 404);
+
+        return redirect()
+            ->route('trips.create', $group)
+            ->withInput($this->asDraft($group, $trip));
+    }
+
+    /**
+     * Aquel viaje, convertido en borrador de éste.
+     *
+     * La fecha NO se copia: se repite el trayecto, no el día. Las notas
+     * tampoco, que eran de aquella vez.
+     *
+     * @return array<string, mixed>
+     */
+    private function asDraft(Group $group, Trip $trip): array
+    {
+        $draft = [
+            'origin_label' => $trip->origin_label,
+            'origin_lat' => $trip->origin_lat,
+            'origin_lon' => $trip->origin_lon,
+            'destination_label' => $trip->destination_label,
+            'destination_lat' => $trip->destination_lat,
+            'destination_lon' => $trip->destination_lon,
+            'round_trip' => $trip->round_trip ? '1' : null,
+            'luggage_kg' => $trip->luggage_kg,
+            'battery_start_pct' => $trip->battery_start_pct,
+        ];
+
+        // Sólo si siguen estando: sin esto el desplegable se queda con el
+        // primero de la lista y se apuntaría el viaje con otro coche.
+        if ($this->availableVehicles($group)->contains('id', $trip->vehicle_id)) {
+            $draft['vehicle_id'] = $trip->vehicle_id;
+        }
+
+        if ($group->activeMembers()->whereKey($trip->driver_member_id)->exists()) {
+            $draft['driver_member_id'] = $trip->driver_member_id;
+        }
+
+        $active = $group->activeMembers()->pluck('id');
+
+        foreach ($trip->passengers as $passenger) {
+            if ($active->doesntContain($passenger->group_member_id)) {
+                continue;
+            }
+
+            $draft['passengers'][] = $passenger->group_member_id;
+            $draft['weights'][$passenger->group_member_id] = rtrim(rtrim((string) $passenger->weight, '0'), '.');
+        }
+
+        return $draft + $this->manualRoute($trip);
+    }
+
+    /**
+     * La distancia corregida a mano, si aquel viaje la llevaba.
+     *
+     * Lo de la ida y vuelta tiene truco: el formulario pide la ida y el
+     * estimador la dobla, así que lo guardado hay que partirlo. El desnivel no
+     * se puede deshacer —lo que se sube a la ida se baja a la vuelta, y en la
+     * tabla ya vienen sumados— así que en ida y vuelta se deja en blanco antes
+     * que inventarse un reparto.
+     *
+     * @return array<string, mixed>
+     */
+    private function manualRoute(Trip $trip): array
+    {
+        if ($trip->route_source !== 'manual' || ! $trip->distance_m) {
+            return [];
+        }
+
+        $distanceM = $trip->round_trip ? $trip->distance_m / 2 : $trip->distance_m;
+
+        return array_filter([
+            'distance_km' => round($distanceM / 1000, 1),
+            'ascent_m' => $trip->round_trip ? null : $trip->ascent_m,
+            'descent_m' => $trip->round_trip ? null : $trip->descent_m,
+        ], fn ($value) => $value !== null);
     }
 
     public function store(StoreTripRequest $request, Group $group, TripRecorder $recorder): RedirectResponse

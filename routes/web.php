@@ -58,6 +58,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/viajes/nuevo', [TripController::class, 'create'])->name('trips.create');
         Route::post('/viajes', [TripController::class, 'store'])->name('trips.store');
         Route::get('/viajes/{trip}', [TripController::class, 'show'])->name('trips.show');
+        // Rellena el formulario con aquel viaje; no apunta nada por su cuenta
+        Route::get('/viajes/{trip}/repetir', [TripController::class, 'repeat'])->name('trips.repeat');
         Route::post('/viajes/{trip}/anular', [TripController::class, 'cancel'])->name('trips.cancel');
 
         Route::get('/libro', [LedgerController::class, 'index'])->name('ledger.index');
