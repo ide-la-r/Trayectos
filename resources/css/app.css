@@ -178,9 +178,24 @@
 }
 
 @utility field {
-    @apply w-full rounded-xl border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900
+    @apply w-full min-w-0 max-w-full rounded-xl border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900
            shadow-sm transition placeholder:text-neutral-400
            focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 focus:outline-none;
+}
+
+/*
+ * El campo de fecha nativo de iOS no baja de su ancho intrínseco: con w-full se
+ * seguía saliendo por la derecha de la tarjeta, porque el mínimo lo pone el
+ * navegador según el formato de fecha del sistema —«9 sept 2026» ocupa bastante
+ * más que «09/09/2026»—. min-width: 0 es lo único que lo deja encoger, y el
+ * box-sizing evita que el relleno lo vuelva a sacar.
+ */
+input[type='date'],
+input[type='datetime-local'],
+input[type='time'] {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 @utility btn {
