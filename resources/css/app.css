@@ -107,20 +107,22 @@
     view-transition-name: nav-side;
 }
 
-@utility vt-nav-bottom {
-    view-transition-name: nav-bottom;
-
-    /*
-     * La barra se quedaba pintada en mitad de la pantalla al arrastrar en el
-     * iPhone, en la pantalla de precios con el mapa abierto.
-     *
-     * Es el fallo clásico de iOS con un elemento fijo cuando en la página hay
-     * un lienzo WebGL: el mapa fuerza una capa de composición y Safari deja de
-     * repintar la barra a la vez que el resto, así que durante el arrastre
-     * aparece donde estaba hace unos fotogramas. Darle su propia capa con
-     * translateZ hace que la componga el mismo camino rápido y deje de
-     * descolgarse.
-     */
+/*
+ * La barra inferior NO lleva view-transition-name, y es a propósito.
+ *
+ * Lo llevaba, para que se quedase quieta mientras el resto de la página
+ * transiciona. El precio era que en el iPhone se quedaba pintada en mitad de
+ * la pantalla: Safari captura el elemento para la transición y a uno que es
+ * position:fixed lo devuelve en las coordenadas de la captura, no en las que
+ * le tocan. Se veía justo al entrar en una pantalla y arrastrar.
+ *
+ * Sin nombre, la barra se funde con la página como todo lo demás. En 220 ms no
+ * se nota, y a cambio siempre está donde tiene que estar.
+ *
+ * El translateZ se queda: le da su propia capa de composición, que ayuda en la
+ * pantalla de precios, donde el lienzo WebGL del mapa complica el repintado.
+ */
+@utility nav-bottom-bar {
     transform: translateZ(0);
     backface-visibility: hidden;
 }
