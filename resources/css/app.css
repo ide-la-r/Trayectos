@@ -193,9 +193,32 @@
 input[type='date'],
 input[type='datetime-local'],
 input[type='time'] {
+    /*
+     * appearance: none es lo que de verdad lo arregla en iOS. Con min-width: 0
+     * a secas el campo seguía saliéndose: mientras conserva su apariencia
+     * nativa, Safari lo dimensiona por su contenido interno y no atiende al
+     * ancho que se le pida. Quitarle la apariencia NO le quita el selector de
+     * fecha —eso lo decide el type, no el aspecto—, sólo el icono de calendario.
+     */
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
+}
+
+/*
+ * El triangulito nativo de <details> no pega con nada del resto de la
+ * interfaz. Se esconde aquí y cada bloque pone su propio icono, que además
+ * puede girar al abrirse.
+ */
+summary {
+    list-style: none;
+}
+
+summary::-webkit-details-marker {
+    display: none;
 }
 
 @utility btn {

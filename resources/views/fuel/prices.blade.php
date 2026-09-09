@@ -347,9 +347,10 @@
 
                         {{-- Los números en tabla: la línea no es la única forma de
                              llegar al dato --}}
-                        <details class="mt-3">
-                            <summary class="cursor-pointer text-xs text-neutral-500 hover:text-neutral-700">
+                        <details class="group mt-3">
+                            <summary class="flex cursor-pointer items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-700">
                                 Ver los números
+                                <svg class="size-3.5 shrink-0 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
                             </summary>
                             <div class="mt-2 overflow-x-auto">
                                 <table class="w-full min-w-[18rem] text-xs">

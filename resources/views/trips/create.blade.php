@@ -44,8 +44,10 @@
                                 <option value="{{ $vehicle->id }}"
                                         data-powertrain="{{ $vehicle->powertrain->value }}"
                                         @selected(old('vehicle_id') == $vehicle->id)>
-                                    {{ $vehicle->label }} · {{ $vehicle->consumptionLabel() }}
-                                    ({{ $vehicle->owner->name }})
+                                    {{-- Sin el nombre del dueño cuando el coche es tuyo, y sólo el nombre
+                                         de pila cuando no: el rótulo completo se cortaba en el móvil
+                                         justo por la parte que importa, el consumo. --}}
+                                    {{ $vehicle->label }} · {{ $vehicle->consumptionLabel() }}@if ($vehicle->owner_id !== auth()->id()) · {{ \Illuminate\Support\Str::before($vehicle->owner->name, ' ') }}@endif
                                 </option>
                             @endforeach
                         </select>
@@ -71,15 +73,16 @@
                     <span class="text-sm text-neutral-700">
                         Ida y vuelta
                         <span class="block text-xs text-neutral-500">
-                            Duplica los kilómetros y cruza las subidas con las bajadas.
+                            Duplica los kilómetros; la subida de la ida es bajada a la vuelta.
                         </span>
                     </span>
                 </label>
 
-                <details class="rounded-xl border border-neutral-200 px-3 py-2"
+                <details class="group rounded-xl border border-neutral-200 px-3 py-2.5"
                          {{ old('distance_km') ? 'open' : '' }}>
-                    <summary class="cursor-pointer text-sm font-medium text-neutral-700">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-sm font-medium text-neutral-700">
                         Poner los datos a mano
+                        <svg class="size-4 shrink-0 text-neutral-400 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
                     </summary>
 
                     <div class="mt-3 space-y-3">
@@ -136,7 +139,9 @@
                                    class="size-5 rounded border-neutral-300"
                                    @checked(in_array($option->id, old('passengers', [$member->id])))>
                             <span class="flex-1 text-sm text-neutral-800">{{ $option->user->name }}</span>
-                            <select name="weights[{{ $option->id }}]" class="rounded-lg border-neutral-300 py-1 text-xs">
+                            <select name="weights[{{ $option->id }}]"
+                                    class="shrink-0 rounded-lg border-neutral-300 py-2 text-xs"
+                                    aria-label="Cuánto viaje hace {{ $option->user->name }}">
                                 <option value="1" @selected(old("weights.{$option->id}", '1') == '1')>Todo el viaje</option>
                                 <option value="0.5" @selected(old("weights.{$option->id}") == '0.5')>Medio viaje</option>
                             </select>
