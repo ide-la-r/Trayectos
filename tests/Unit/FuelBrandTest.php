@@ -92,14 +92,17 @@ class FuelBrandTest extends TestCase
         // mira public/img/marcas/PROCEDENCIA.md
         return [
             ['REPSOL', 'repsol.svg'],
-            ['CEPSA', 'cepsa.svg'],
             ['E.S. BP', 'bp.svg'],
-            ['GALP', 'galp.svg'],
             ['Q8 TEATINOS', 'q8.svg'],
             ['PLENOIL', 'plenoil.svg'],
             ['CARREFOUR', 'carrefour.svg'],
-            // De Shell hay png (en color) y se prefiere al svg monocromo
+            // Éstos son símbolos cuadrados, que en la insignia se leen mucho
+            // mejor que el nombre escrito
             ['SHELL', 'shell.png'],
+            ['GALP', 'galp.png'],
+            ['MOEVE', 'moeve.png'],
+            // Cepsa se llama Moeve desde 2026: mismo símbolo
+            ['CEPSA', 'cepsa.png'],
         ];
     }
 
@@ -118,7 +121,7 @@ class FuelBrandTest extends TestCase
     {
         // Sus webs bloquean la descarga o su logotipo es demasiado alargado
         // para leerse en la insignia: salen con las iniciales.
-        foreach (['PETROPRIX', 'BALLENOIL', 'MOEVE', 'AVIA', 'E.S. LA PARRA'] as $rotulo) {
+        foreach (['PETROPRIX', 'BALLENOIL', 'AVIA', 'CAMPSA', 'E.S. LA PARRA'] as $rotulo) {
             $this->assertNull(FuelBrand::for($rotulo)->logo, $rotulo);
         }
     }

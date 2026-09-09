@@ -9,24 +9,34 @@ cosa. Buscando el de Shell, por ejemplo, aparecía también el de la película
 
 | Fichero | Marca | Origen | Licencia |
 |---|---|---|---|
-| `cepsa.svg` | Cepsa | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Cepsa.svg) | Dominio público |
-| `galp.svg` | Galp | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Galp_Logo_2024.svg) | Dominio público |
 | `q8.svg` | Q8 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Q8_logo.svg) | Dominio público |
 | `carrefour.svg` | Carrefour | [Simple Icons](https://simpleicons.org/?q=carrefour) | CC0 1.0 |
 
-Wikimedia marca esos logotipos como no protegidos por derechos de autor porque
-su diseño son formas y texto simples, y eso no alcanza el umbral de originalidad
-que exige la ley. No es una interpretación nuestra: es la etiqueta que lleva
-cada fichero en su origen.
+Wikimedia marca ese logotipo como no protegido por derechos de autor porque su
+diseño son formas y texto simples, y eso no alcanza el umbral de originalidad
+que exige la ley. No es una interpretación nuestra: es la etiqueta que lleva el
+fichero en su origen.
 
 ## Los que vienen de la web de la propia marca
+
+Todos son el **icono cuadrado** que cada marca publica para que su web se vea
+bien guardada en la pantalla de inicio de un móvil. Es su símbolo, no el nombre
+escrito, que es lo que se lee en una insignia de 24 píxeles.
 
 | Fichero | Marca | Origen |
 |---|---|---|
 | `repsol.svg` | Repsol | `repsol.es/content/dam/global/logotipos/repsol/` |
 | `bp.svg` | BP | `bp.com/icon.svg` |
+| `cepsa.png` | Cepsa | `moeve.es` (icono para móviles) |
+| `moeve.png` | Moeve | `moeve.es` (icono para móviles) |
+| `galp.png` | Galp | `galp.com` (PNG de 256 px extraído de su favicon) |
 | `plenoil.svg` | Plenoil | `plenergy.es` (icono del sitio) |
 | `shell.png` | Shell | `shell.es` (icono para móviles) |
+
+Cepsa y Moeve comparten fichero porque **son la misma empresa**: Cepsa pasó a
+llamarse Moeve en 2026 y su web redirige. El Ministerio sigue publicando muchas
+estaciones con el rótulo antiguo, así que las dos claves apuntan al mismo
+símbolo.
 
 Éstos **no llevan licencia libre**: son la marca de su dueño, descargada del
 sitio del dueño. Se usan aquí para una sola cosa, decir de qué marca es cada
@@ -39,10 +49,12 @@ carpeta: el mapa vuelve a poner las iniciales de esa marca y no se rompe nada.
 
 ## Las que salen con iniciales
 
-- **Petroprix, Ballenoil, Avia, Alcampo, Petronor, Campsa**: su web bloquea la
-  descarga o no publica un icono utilizable.
-- **Moeve**: el logotipo que hay mide cinco a uno. Encajado en la insignia se
-  queda en cinco píxeles de alto y no se lee.
+- **Ballenoil**: su web está detrás de Cloudflare y no deja pasar.
+- **Petroprix**: el icono que declara su web no se puede descargar.
+- **Alcampo**: sólo publica un `.ico` de 48 px sin PNG dentro, que habría que
+  decodificar a mano.
+- **Avia, Petronor, Campsa**: sus webs no responden a la descarga.
 
-Salen con sus iniciales sobre el color de la marca. Para añadir cualquiera,
-mira el `LEEME.md` de esta misma carpeta.
+Salen con sus iniciales sobre el color de la marca, que en la insignia se leen
+bien. Para añadir cualquiera basta con abrir su web, guardar el icono y dejarlo
+aquí con el nombre de la marca: mira el `LEEME.md`.
