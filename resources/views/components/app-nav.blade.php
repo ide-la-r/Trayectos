@@ -69,7 +69,10 @@
 </aside>
 
 {{-- ── Barra inferior (móvil) ─────────────────────────────────────────────── --}}
-<nav class="vt-nav-bottom fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white/95 backdrop-blur lg:hidden"
+{{-- Fondo opaco y sin desenfoque a propósito: un backdrop-filter sobre un
+     elemento fijo es el otro disparador del fallo de repintado de iOS, y aquí
+     no aporta nada porque debajo no hay nada que valga la pena entrever. --}}
+<nav class="vt-nav-bottom fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white lg:hidden"
      style="padding-bottom: env(safe-area-inset-bottom)"
      aria-label="Secciones">
     <div class="mx-auto flex max-w-2xl items-stretch px-2">

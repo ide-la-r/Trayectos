@@ -25,7 +25,7 @@ escrito, que es lo que se lee en una insignia de 24 píxeles.
 
 | Fichero | Marca | Origen |
 |---|---|---|
-| `repsol.svg` | Repsol | `repsol.es/content/dam/global/logotipos/repsol/` |
+| `repsol.svg` | Repsol | `repsol.es/content/dam/global/logotipos/repsol/` (recortado al símbolo) |
 | `bp.svg` | BP | `bp.com/icon.svg` |
 | `cepsa.png` | Cepsa | `moeve.es` (icono para móviles) |
 | `moeve.png` | Moeve | `moeve.es` (icono para móviles) |
@@ -37,6 +37,11 @@ Cepsa y Moeve comparten fichero porque **son la misma empresa**: Cepsa pasó a
 llamarse Moeve en 2026 y su web redirige. El Ministerio sigue publicando muchas
 estaciones con el rótulo antiguo, así que las dos claves apuntan al mismo
 símbolo.
+
+El de Repsol es el único que venía con el nombre escrito al lado, y en una
+insignia de 24 píxeles eso no se lee. Está **recortado al símbolo** cambiando
+sólo el `viewBox` del SVG, que es la ventana por la que se mira el dibujo: no
+se ha tocado ni un trazo, el fichero sigue entero y sólo se enseña la llama.
 
 Éstos **no llevan licencia libre**: son la marca de su dueño, descargada del
 sitio del dueño. Se usan aquí para una sola cosa, decir de qué marca es cada

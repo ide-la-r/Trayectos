@@ -109,6 +109,20 @@
 
 @utility vt-nav-bottom {
     view-transition-name: nav-bottom;
+
+    /*
+     * La barra se quedaba pintada en mitad de la pantalla al arrastrar en el
+     * iPhone, en la pantalla de precios con el mapa abierto.
+     *
+     * Es el fallo clásico de iOS con un elemento fijo cuando en la página hay
+     * un lienzo WebGL: el mapa fuerza una capa de composición y Safari deja de
+     * repintar la barra a la vez que el resto, así que durante el arrastre
+     * aparece donde estaba hace unos fotogramas. Darle su propia capa con
+     * translateZ hace que la componga el mismo camino rápido y deje de
+     * descolgarse.
+     */
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 /* Movimiento ambiental del asfalto de la marca: es decorativo y va sobre un
