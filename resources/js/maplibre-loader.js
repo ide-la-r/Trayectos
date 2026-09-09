@@ -40,8 +40,15 @@ export default function loadMaplibre() {
     return pending;
 }
 
-/** Estilo apagado a propósito: el protagonista es lo que pintamos encima. */
-export const MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
+/**
+ * OpenFreeMap sirve tres estilos y ninguno pide clave ni tiene cuota.
+ *
+ * «liberty» es el que se parece a un mapa normal —parques en verde, agua en
+ * azul, carreteras con su color— y es el que se eligió después de comparar los
+ * tres: «positron» está lavado a propósito para servir de fondo a unos datos y
+ * hacía que la pantalla pareciera a medio hacer.
+ */
+export const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 /**
  * El estilo trae sus fuentes tipográficas como glifos; ésta es la única que se
