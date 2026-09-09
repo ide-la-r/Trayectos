@@ -39,9 +39,19 @@ export default (config = {}) => ({
         await this.$nextTick();
 
         try {
-            const { Map, NavigationControl, LngLatBounds } = await loadMaplibre();
+            /*
+             * Los logotipos se cargan A LA VEZ que MapLibre y antes de dibujar,
+             * no después. Son unos kilobytes contra los 274 de la librería, así
+             * que en tiempo salen gratis, y así cada burbuja se genera ya con
+             * su logotipo: sustituirla después no vale, porque el ancho de la
+             * burbuja depende del logotipo y updateImage exige el mismo tamaño.
+             */
+            const [{ Map, NavigationControl, LngLatBounds }, logos] = await Promise.all([
+                loadMaplibre(),
+                this.loadLogos(),
+            ]);
 
-            this.draw({ Map, NavigationControl, LngLatBounds });
+            this.draw({ Map, NavigationControl, LngLatBounds }, logos);
             this.loaded = true;
         } catch {
             this.failed = true;
@@ -66,7 +76,32 @@ export default (config = {}) => ({
         }
     },
 
-    draw({ Map, NavigationControl, LngLatBounds }) {
+    /**
+     * Los logotipos de las marcas que tengan fichero puesto.
+     *
+     * Una marca sin logotipo, o cuyo fichero falte o esté roto, simplemente no
+     * entra en el mapa que se devuelve: su burbuja saldrá con las iniciales.
+     *
+     * @returns Map de clave de marca a imagen cargada
+     */
+    async loadLogos() {
+        const brands = this.uniqueBrands(config.stations ?? []).filter((b) => b.logo);
+
+        const cargados = await Promise.all(brands.map((brand) => new Promise((resolve) => {
+            const image = new Image();
+
+            image.onload = () => resolve([brand.key, image]);
+            image.onerror = () => {
+                console.warn('Logotipo no cargado:', brand.logo);
+                resolve(null);
+            };
+            image.src = brand.logo;
+        })));
+
+        return new window.Map(cargados.filter(Boolean));
+    },
+
+    draw({ Map, NavigationControl, LngLatBounds }, logos) {
         const stations = config.stations ?? [];
 
         if (stations.length === 0) {
@@ -105,29 +140,12 @@ export default (config = {}) => ({
                 station.marker = `${station.brand.key}|${station.price}|${station.tier}`;
 
                 if (! map.hasImage(station.marker)) {
-                    map.addImage(station.marker, this.bubble(station), { pixelRatio: 2 });
+                    map.addImage(
+                        station.marker,
+                        this.bubble(station, logos.get(station.brand.key)),
+                        { pixelRatio: 2 },
+                    );
                 }
-            }
-
-            /*
-             * Si hay logotipo puesto, se rehacen las burbujas de esa marca en
-             * cuanto llegue. No se espera a que cargue: así el mapa sale ya, y
-             * si el fichero falta o está mal se quedan las iniciales y no se
-             * rompe nada. Las medidas no cambian —dependen del precio, no del
-             * logotipo—, que es lo que exige updateImage.
-             */
-            for (const brand of this.uniqueBrands(stations)) {
-                if (! brand.logo) {
-                    continue;
-                }
-
-                this.loadLogo(brand)
-                    .then((logo) => {
-                        for (const station of stations.filter((s) => s.brand.key === brand.key)) {
-                            map.updateImage(station.marker, this.bubble(station, logo));
-                        }
-                    })
-                    .catch(() => console.warn('Logotipo no cargado:', brand.logo));
             }
 
             map.addSource('gasolineras', {
@@ -198,16 +216,6 @@ export default (config = {}) => ({
         return [...brands.values()];
     },
 
-    loadLogo(brand) {
-        return new Promise((resolve, reject) => {
-            const image = new Image();
-
-            image.onload = () => resolve(image);
-            image.onerror = reject;
-            image.src = brand.logo;
-        });
-    },
-
     /**
      * La insignia de una marca, dibujada en un canvas.
      *
@@ -221,12 +229,37 @@ export default (config = {}) => ({
         const ratio = 2;
         const h = 32 * ratio;
         const tip = 7 * ratio;         // pico que señala el sitio exacto
-        const dot = 24 * ratio;        // círculo de la marca
+        const slotH = 24 * ratio;      // alto del hueco de la marca
         const padL = 4 * ratio;
         const gap = 6 * ratio;
         const padR = 10 * ratio;
         const pad = 3 * ratio;         // aire para que la sombra no se corte
         const font = `600 ${13 * ratio}px system-ui, -apple-system, sans-serif`;
+
+        /*
+         * El hueco de la marca se adapta a la forma de su logotipo, porque los
+         * de las petroleras casi nunca son un símbolo cuadrado: son el nombre
+         * escrito y muy alargados. En un círculo se quedarían en una raya.
+         *
+         * Y hay un suelo de legibilidad: si al encajarlo su alto no llega a
+         * 11 px, no se usa y se vuelve a las iniciales. Es lo que pasa con el
+         * de BP, que mide diez a uno.
+         */
+        const maxSlotW = 44 * ratio;
+        let slotW = slotH;
+        let useLogo = false;
+
+        if (logo) {
+            const iw = logo.naturalWidth || logo.width || 1;
+            const ih = logo.naturalHeight || logo.height || 1;
+
+            slotW = Math.min(maxSlotW, Math.max(slotH, slotH * (iw / ih)));
+            useLogo = Math.min(slotW / iw, slotH / ih) * ih >= 11 * ratio;
+
+            if (! useLogo) {
+                slotW = slotH;
+            }
+        }
 
         // El ancho depende del precio, así que hay que medirlo antes de saber
         // de qué tamaño es el lienzo.
@@ -234,7 +267,7 @@ export default (config = {}) => ({
         ruler.font = font;
         const textWidth = Math.ceil(ruler.measureText(station.price).width);
 
-        const w = padL + dot + gap + textWidth + padR;
+        const w = padL + slotW + gap + textWidth + padR;
 
         const canvas = document.createElement('canvas');
         canvas.width = w + pad * 2;
@@ -284,24 +317,37 @@ export default (config = {}) => ({
         ctx.strokeStyle = { 0: '#15803d', 2: '#b91c1c' }[station.tier] ?? '#d97706';
         ctx.stroke();
 
-        // ── Círculo de la marca ─────────────────────────────────────────────
-        const cx = left + padL + dot / 2;
+        // ── Hueco de la marca ───────────────────────────────────────────────
+        const cx = left + padL + slotW / 2;
         const cy = top + h / 2;
 
         ctx.save();
         ctx.beginPath();
-        ctx.arc(cx, cy, dot / 2, 0, Math.PI * 2);
-        ctx.fillStyle = logo ? '#ffffff' : station.brand.bg;
+
+        if (slotW === slotH) {
+            // Cuadrado: círculo, que es lo que se lee como insignia de marca
+            ctx.arc(cx, cy, slotH / 2, 0, Math.PI * 2);
+        } else {
+            // Alargado: pastilla, para que el logotipo respire a los lados
+            const rr = slotH / 2;
+            ctx.moveTo(cx - slotW / 2 + rr, cy - slotH / 2);
+            ctx.lineTo(cx + slotW / 2 - rr, cy - slotH / 2);
+            ctx.arc(cx + slotW / 2 - rr, cy, rr, -Math.PI / 2, Math.PI / 2);
+            ctx.lineTo(cx - slotW / 2 + rr, cy + slotH / 2);
+            ctx.arc(cx - slotW / 2 + rr, cy, rr, Math.PI / 2, -Math.PI / 2);
+        }
+
+        ctx.closePath();
+        // Con logotipo el fondo va blanco: el logotipo puede ser de cualquier
+        // color y sobre el de la marca podría no verse.
+        ctx.fillStyle = useLogo ? '#ffffff' : station.brand.bg;
         ctx.fill();
         ctx.clip();
 
-        if (logo) {
-            // Encajado sin deformarlo. Un SVG sin tamaño propio declara 0, y de
-            // ahí el respaldo.
-            const box = dot - 2 * ratio;
-            const iw = logo.naturalWidth || logo.width || box;
-            const ih = logo.naturalHeight || logo.height || box;
-            const scale = Math.min(box / iw, box / ih);
+        if (useLogo) {
+            const iw = logo.naturalWidth || logo.width || slotW;
+            const ih = logo.naturalHeight || logo.height || slotH;
+            const scale = Math.min(slotW / iw, slotH / ih);
 
             ctx.drawImage(logo, cx - (iw * scale) / 2, cy - (ih * scale) / 2, iw * scale, ih * scale);
         } else {
@@ -319,7 +365,7 @@ export default (config = {}) => ({
         ctx.font = font;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(station.price, left + padL + dot + gap, cy + ratio * 0.5);
+        ctx.fillText(station.price, left + padL + slotW + gap, cy + ratio * 0.5);
 
         return {
             width: canvas.width,

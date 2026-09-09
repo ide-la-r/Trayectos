@@ -86,36 +86,48 @@ class FuelBrandTest extends TestCase
         }
     }
 
-    public function test_sin_ficheros_de_logotipo_no_hay_logotipo(): void
+    public static function marcasConLogotipo(): array
     {
-        // El repositorio no trae ninguno: los logotipos de las petroleras son
-        // suyos y no se puede acreditar con qué licencia se meterían aquí.
-        $this->assertNull(FuelBrand::for('REPSOL')->logo);
+        // Los que vienen en el repositorio, con su licencia comprobada una a
+        // una: mira public/img/marcas/PROCEDENCIA.md
+        return [['CEPSA', 'cepsa'], ['GALP', 'galp'], ['Q8 TEATINOS', 'q8'], ['SHELL', 'shell'], ['CARREFOUR', 'carrefour']];
     }
 
-    public function test_si_alguien_pone_el_fichero_se_usa(): void
+    #[DataProvider('marcasConLogotipo')]
+    public function test_las_marcas_con_fichero_lo_encuentran(string $rotulo, string $clave): void
     {
-        $ruta = public_path('img/marcas/repsol.png');
-        $yaExistia = is_file($ruta);
+        /*
+         * Guardián de la correspondencia entre la clave de la marca y el nombre
+         * del fichero: si se renombra una o se borra el otro, el mapa se queda
+         * con las iniciales sin decir nada.
+         */
+        $this->assertSame("/img/marcas/$clave.svg", FuelBrand::for($rotulo)->logo);
+    }
 
-        if (! $yaExistia) {
-            // Un PNG de 1x1 transparente, que es lo mínimo que se puede escribir
-            file_put_contents($ruta, base64_decode(
-                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='
-            ));
+    public function test_las_marcas_sin_fichero_no_tienen_logotipo(): void
+    {
+        // Repsol no está porque en Commons sólo hay el logotipo de 1968; las
+        // otras, porque no hay ningún fichero con licencia comprobable.
+        foreach (['REPSOL', 'PETROPRIX', 'BALLENOIL', 'PLENOIL', 'E.S. LA PARRA'] as $rotulo) {
+            $this->assertNull(FuelBrand::for($rotulo)->logo, $rotulo);
         }
+    }
+
+    public function test_si_alguien_pone_un_png_se_prefiere_al_svg(): void
+    {
+        $ruta = public_path('img/marcas/petroprix.png');
+
+        // Un PNG de 1x1 transparente, que es lo mínimo que se puede escribir
+        file_put_contents($ruta, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='
+        ));
 
         try {
             FuelBrand::forgetLogos();
 
-            $this->assertSame('/img/marcas/repsol.png', FuelBrand::for('REPSOL')->logo);
-            // Y las demás siguen sin logotipo: el fichero es por marca
-            $this->assertNull(FuelBrand::for('CEPSA')->logo);
+            $this->assertSame('/img/marcas/petroprix.png', FuelBrand::for('PETROPRIX')->logo);
         } finally {
-            if (! $yaExistia) {
-                @unlink($ruta);
-            }
-
+            @unlink($ruta);
             FuelBrand::forgetLogos();
         }
     }
