@@ -39,6 +39,9 @@ final class FuelBrand
         'SHELL' => ['Shell', 'SH', '#FBCE07', '#3D2B00'],
         'PETROPRIX' => ['Petroprix', 'PX', '#0B2C5A', '#FFFFFF'],
         'BALLENOIL' => ['Ballenoil', 'BA', '#0069B4', '#FFFFFF'],
+        // Plenoil se llama Plenergy desde el cambio de nombre y plenoil.es
+        // redirige, pero el Ministerio publica estaciones con los dos rótulos.
+        'PLENERGY' => ['Plenergy', 'PE', '#00A19A', '#FFFFFF'],
         'PLENOIL' => ['Plenoil', 'PL', '#00A19A', '#FFFFFF'],
         'PETROMAX' => ['Petromax', 'PM', '#C8102E', '#FFFFFF'],
         'MEROIL' => ['Meroil', 'ME', '#003C71', '#FFFFFF'],
@@ -49,6 +52,14 @@ final class FuelBrand
         'DISA' => ['Disa', 'DI', '#005CA9', '#FFFFFF'],
         'AVIA' => ['Avia', 'AV', '#E2001A', '#FFFFFF'],
         'TAMOIL' => ['Tamoil', 'TA', '#E1261C', '#FFFFFF'],
+        /*
+         * Coloso es un independiente con tres estaciones en toda España, dos de
+         * ellas en Málaga. No tiene web, así que no hay logotipo que traer y el
+         * color es uno elegido aquí, no el suyo: sirve para que sus estaciones
+         * se reconozcan entre sí y no se mezclen con cualquier otra marca que
+         * empiece por C.
+         */
+        'COLOSO' => ['Coloso', 'CO', '#7C3AED', '#FFFFFF'],
         'ESCLATOIL' => ['Esclatoil', 'ES', '#F39200', '#FFFFFF'],
         '\bBP\b' => ['BP', 'BP', '#009E49', '#FFFFFF'],
         '\bQ8\b' => ['Q8', 'Q8', '#D0021B', '#FFFFFF'],

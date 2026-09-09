@@ -102,6 +102,8 @@ class FuelBrandTest extends TestCase
             ['GALP', 'galp.png'],
             ['MOEVE', 'moeve.png'],
             ['BALLENOIL CHURRIANA', 'ballenoil.png'],
+            // Plenoil se llama Plenergy y plenoil.es redirige: mismo símbolo
+            ['PLENERGY MALAGA', 'plenergy.svg'],
             // Cepsa se llama Moeve desde 2026: mismo símbolo
             ['CEPSA', 'cepsa.png'],
             // En jpg, que es como se guarda un logotipo de una web sin pensarlo
@@ -118,6 +120,21 @@ class FuelBrandTest extends TestCase
          * con las iniciales sin decir nada.
          */
         $this->assertSame("/img/marcas/$fichero", FuelBrand::for($rotulo)->logo);
+    }
+
+    public function test_reconoce_a_coloso_aunque_no_tenga_logotipo(): void
+    {
+        /*
+         * Coloso es un independiente de tres estaciones sin web. No hay
+         * logotipo, pero sí entrada propia: sin ella todas caerían en el
+         * genérico «C» y se mezclarían con cualquier otra marca que empiece
+         * igual, en vez de reconocerse entre sí.
+         */
+        $marca = FuelBrand::for('ES COLOSO CHURRIANA');
+
+        $this->assertSame('Coloso', $marca->name);
+        $this->assertSame('CO', $marca->short);
+        $this->assertNull($marca->logo);
     }
 
     public function test_las_marcas_sin_fichero_no_tienen_logotipo(): void

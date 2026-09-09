@@ -31,6 +31,7 @@ escrito, que es lo que se lee en una insignia de 24 píxeles.
 | `moeve.png` | Moeve | `moeve.es` (icono para móviles) |
 | `galp.png` | Galp | `galp.com` (PNG de 256 px extraído de su favicon) |
 | `plenoil.svg` | Plenoil | `plenergy.es` (icono del sitio) |
+| `plenergy.svg` | Plenergy | El mismo: plenoil.es redirige a plenergy.es |
 | `shell.png` | Shell | `shell.es` (icono para móviles) |
 | `ballenoil.png` | Ballenoil | Aportado por Ismael |
 | `petroprix.jpg` | Petroprix | Aportado por Ismael |
@@ -60,6 +61,10 @@ Cloudflare.
 
 ## Las que salen con iniciales
 
+- **Coloso**: es un independiente con tres estaciones en toda España, dos de
+  ellas en Málaga, y no tiene web. No hay logotipo que traer. Tiene entrada
+  propia en `FuelBrand` para que sus estaciones se reconozcan entre sí, pero el
+  color de su insignia lo elegimos aquí: no es el suyo.
 - **Alcampo**: sólo publica un `.ico` de 48 px sin PNG dentro, que habría que
   decodificar a mano.
 - **Avia, Petronor, Campsa**: sus webs no responden a la descarga.
