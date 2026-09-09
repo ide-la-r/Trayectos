@@ -7,6 +7,7 @@ namespace App\Services\Fuel;
 use App\Enums\FuelKind;
 use App\Models\FuelStation;
 use App\Support\FuelArea;
+use App\Support\FuelBrand;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -204,6 +205,8 @@ final class FuelPriceHistoryService
             'lat' => (float) $row->lat,
             'lon' => (float) $row->lon,
             'label' => $row->label ?: 'Estación sin rótulo',
+            // La marca sale del rótulo: el Ministerio no publica ese campo
+            'brand' => FuelBrand::for($row->label),
             'municipality' => $row->municipality,
             'address' => $row->address,
             'price' => number_format($row->price_milli / 1000, 3, ',', '.'),

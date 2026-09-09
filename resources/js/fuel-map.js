@@ -2,22 +2,26 @@ import { directionsUrl } from './map-links';
 import loadMaplibre, { MAP_FONT, MAP_STYLE } from './maplibre-loader';
 
 /**
- * Mapa de gasolineras con el precio escrito encima.
+ * Mapa de gasolineras: la marca de cada una y su precio, escritos encima.
  *
- * La idea es la de Gasall: el precio se lee de un vistazo, sin tocar ningún
- * punto. Eso descarta los marcadores de HTML —serían cientos de nodos que se
- * pisan unos a otros— y pide una capa de símbolos: MapLibre resuelve él mismo
- * las colisiones, esconde las etiquetas que no caben y va sacando más a medida
- * que se acerca el zoom. Es exactamente el comportamiento que se quiere y sale
- * gratis.
+ * La idea es la de Gasall: se lee de un vistazo sin tocar nada. Eso descarta
+ * los marcadores de HTML —serían cientos de nodos pisándose— y pide una capa de
+ * símbolos, donde MapLibre resuelve él mismo las colisiones, esconde lo que no
+ * cabe y va sacando más al acercar el zoom.
  *
- * Igual que el mapa del viaje, no se descarga nada hasta que alguien lo pide.
+ * Las insignias de marca se dibujan aquí, en un canvas, y se registran en el
+ * mapa como imágenes. No son los logotipos de las petroleras: son marcas
+ * propias con las iniciales y un color aproximado al corporativo. Si algún día
+ * hay ficheros de logotipo con licencia acreditada, el único cambio es sustituir
+ * badge() por una carga de imagen: el resto ya funciona por clave de marca.
  */
 export default (config = {}) => ({
     visible: false,
     loaded: false,
     loading: false,
     failed: false,
+    expanded: false,
+    chosen: null,
     map: null,
 
     async show() {
@@ -35,9 +39,9 @@ export default (config = {}) => ({
         await this.$nextTick();
 
         try {
-            const { Map, NavigationControl, Popup, LngLatBounds } = await loadMaplibre();
+            const { Map, NavigationControl, LngLatBounds } = await loadMaplibre();
 
-            this.draw({ Map, NavigationControl, Popup, LngLatBounds });
+            this.draw({ Map, NavigationControl, LngLatBounds });
             this.loaded = true;
         } catch {
             this.failed = true;
@@ -47,7 +51,22 @@ export default (config = {}) => ({
         }
     },
 
-    draw({ Map, NavigationControl, Popup, LngLatBounds }) {
+    /** Pantalla completa por CSS y no con la API del navegador: en iPhone esa API no existe. */
+    async toggleExpand() {
+        this.expanded = ! this.expanded;
+        document.body.classList.toggle('overflow-hidden', this.expanded);
+
+        await this.$nextTick();
+        this.map?.resize();
+    },
+
+    close() {
+        if (this.expanded) {
+            this.toggleExpand();
+        }
+    },
+
+    draw({ Map, NavigationControl, LngLatBounds }) {
         const stations = config.stations ?? [];
 
         if (stations.length === 0) {
@@ -66,7 +85,7 @@ export default (config = {}) => ({
             container: this.$refs.canvas,
             style: MAP_STYLE,
             bounds,
-            fitBoundsOptions: { padding: 40, maxZoom: 14 },
+            fitBoundsOptions: { padding: 48, maxZoom: 14 },
         });
 
         this.map = map;
@@ -76,27 +95,43 @@ export default (config = {}) => ({
         map.on('error', (event) => console.warn('Mapa de gasolineras:', event.error?.message ?? event));
 
         const paint = () => {
+            // Una insignia por marca, no por gasolinera: en una zona con
+            // cuarenta Repsol se dibuja una sola imagen.
+            for (const brand of this.uniqueBrands(stations)) {
+                if (! map.hasImage(brand.key)) {
+                    map.addImage(brand.key, this.badge(brand), { pixelRatio: 2 });
+                }
+            }
+
             map.addSource('gasolineras', {
                 type: 'geojson',
                 data: {
                     type: 'FeatureCollection',
-                    features: stations.map((s) => ({
+                    features: stations.map((s, index) => ({
                         type: 'Feature',
                         geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
-                        properties: s,
+                        // Planas a propósito: MapLibre convierte a texto
+                        // cualquier propiedad que no sea un valor simple, así
+                        // que un objeto anidado llegaría inservible.
+                        properties: {
+                            index,
+                            brandKey: s.brand.key,
+                            price: s.price,
+                            tier: s.tier,
+                        },
                     })),
                 },
             });
 
             /*
-             * El color va por tercios de posición en el ranking, no por rango de
-             * precio: una gasolinera disparatada arrastraría a todas las demás
-             * al nivel «barata». El nivel lo calcula el servidor.
+             * El color del precio va por tercios de posición en el ranking, no
+             * por rango: una gasolinera disparatada arrastraría a las demás al
+             * nivel «barata». El nivel lo calcula el servidor.
              *
-             * Y el color nunca es la información: el precio está escrito al
-             * lado, así que quien no distinga verde de rojo lee lo mismo.
+             * Y el color no es la información: el número está escrito ahí
+             * mismo, así que quien no distinga verde de rojo lee lo mismo.
              */
-            const porNivel = [
+            const byTier = [
                 'match', ['get', 'tier'],
                 0, '#15803d',   // credit-700: de las baratas
                 2, '#b91c1c',   // debt-700: de las caras
@@ -104,51 +139,42 @@ export default (config = {}) => ({
             ];
 
             map.addLayer({
-                id: 'gasolineras-punto',
-                type: 'circle',
-                source: 'gasolineras',
-                paint: {
-                    'circle-radius': 5,
-                    'circle-color': porNivel,
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#ffffff',
-                },
-            });
-
-            map.addLayer({
-                id: 'gasolineras-precio',
+                id: 'gasolineras',
                 type: 'symbol',
                 source: 'gasolineras',
                 layout: {
+                    'icon-image': ['get', 'brandKey'],
+                    'icon-anchor': 'bottom',
+                    'icon-allow-overlap': false,
                     'text-field': ['get', 'price'],
                     'text-font': MAP_FONT,
                     'text-size': 12,
-                    'text-offset': [0, -1.1],
-                    'text-anchor': 'bottom',
-                    // Sin allow-overlap: es lo que hace que MapLibre esconda las
-                    // que se pisan y saque mas al acercar el zoom.
-                    'text-ignore-placement': false,
+                    'text-anchor': 'top',
+                    'text-offset': [0, 0.25],
+                    // El icono y el precio son un solo símbolo: o entran los
+                    // dos o no entra ninguno, y nunca se separan.
+                    'text-optional': false,
                 },
                 paint: {
-                    'text-color': porNivel,
+                    'text-color': byTier,
                     'text-halo-color': '#ffffff',
                     'text-halo-width': 1.6,
                 },
             });
 
-            map.on('click', 'gasolineras-punto', (event) => {
-                const s = event.features[0].properties;
-
-                new Popup({ offset: 12, closeButton: false })
-                    .setLngLat([s.lon, s.lat])
-                    .setDOMContent(this.card(s))
-                    .addTo(map);
+            map.on('click', 'gasolineras', (event) => {
+                this.chosen = stations[event.features[0].properties.index] ?? null;
             });
 
-            for (const capa of ['gasolineras-punto', 'gasolineras-precio']) {
-                map.on('mouseenter', capa, () => { map.getCanvas().style.cursor = 'pointer'; });
-                map.on('mouseleave', capa, () => { map.getCanvas().style.cursor = ''; });
-            }
+            // Tocar el mapa fuera de una gasolinera cierra la ficha
+            map.on('click', (event) => {
+                if (map.queryRenderedFeatures(event.point, { layers: ['gasolineras'] }).length === 0) {
+                    this.chosen = null;
+                }
+            });
+
+            map.on('mouseenter', 'gasolineras', () => { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', 'gasolineras', () => { map.getCanvas().style.cursor = ''; });
         };
 
         /*
@@ -164,41 +190,67 @@ export default (config = {}) => ({
         }
     },
 
+    /** @returns las marcas distintas que hay en la zona */
+    uniqueBrands(stations) {
+        const brands = new Map();
+
+        for (const s of stations) {
+            brands.set(s.brand.key, s.brand);
+        }
+
+        return [...brands.values()];
+    },
+
     /**
-     * El contenido de la burbuja, construido con nodos y textContent en vez de
-     * con una cadena de HTML: los rótulos y las direcciones vienen de la API
-     * del Ministerio y no hay ninguna razón para dejarlos entrar como HTML.
+     * La insignia de una marca, dibujada en un canvas.
+     *
+     * A doble resolución y registrada con pixelRatio 2, que es lo que la deja
+     * nítida en una pantalla de móvil.
      */
-    card(station) {
-        const card = document.createElement('div');
-        card.className = 'space-y-0.5';
+    badge(brand) {
+        const ratio = 2;
+        const side = 30 * ratio;
+        const inset = 2 * ratio;
 
-        const line = (text, className) => {
-            if (! text) {
-                return;
-            }
+        const canvas = document.createElement('canvas');
+        canvas.width = side;
+        canvas.height = side;
 
-            const el = document.createElement('p');
-            el.className = className;
-            el.textContent = text;
-            card.appendChild(el);
+        const ctx = canvas.getContext('2d');
+
+        ctx.beginPath();
+
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(inset, inset, side - inset * 2, side - inset * 2, 8 * ratio);
+        } else {
+            // Safari antiguo no tiene roundRect; un cuadrado se lee igual
+            ctx.rect(inset, inset, side - inset * 2, side - inset * 2);
+        }
+
+        ctx.fillStyle = brand.bg;
+        ctx.fill();
+
+        // Borde blanco: es lo que mantiene la insignia legible sobre cualquier
+        // color del mapa, igual que el halo del precio.
+        ctx.lineWidth = 2 * ratio;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        ctx.fillStyle = brand.ink;
+        ctx.font = `700 ${(brand.short.length > 2 ? 10 : 13) * ratio}px system-ui, -apple-system, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(brand.short, side / 2, side / 2 + ratio);
+
+        return {
+            width: side,
+            height: side,
+            data: ctx.getImageData(0, 0, side, side).data,
         };
+    },
 
-        line(`${station.price} €/${station.unit}`, 'text-sm font-semibold text-neutral-900');
-        line(station.label, 'text-xs font-medium text-neutral-800');
-        line([station.municipality, station.address].filter(Boolean).join(' · '), 'text-xs text-neutral-500');
-        line(station.distance ? `a ${station.distance} km` : null, 'text-xs text-neutral-500');
-
-        const link = document.createElement('a');
-        // La misma decisión que en el listado: Mapas en los aparatos de Apple,
-        // Google Maps en el resto.
-        link.href = directionsUrl(station.lat, station.lon);
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.className = 'mt-1 inline-block text-xs font-medium text-neutral-900 underline underline-offset-2';
-        link.textContent = 'Cómo llegar';
-        card.appendChild(link);
-
-        return card;
+    /** La misma decisión que en el listado: Mapas en Apple, Google en el resto. */
+    directionsFor(station) {
+        return station ? directionsUrl(station.lat, station.lon) : '#';
     },
 });
