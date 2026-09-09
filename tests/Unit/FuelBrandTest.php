@@ -88,27 +88,37 @@ class FuelBrandTest extends TestCase
 
     public static function marcasConLogotipo(): array
     {
-        // Los que vienen en el repositorio, con su licencia comprobada una a
-        // una: mira public/img/marcas/PROCEDENCIA.md
-        return [['CEPSA', 'cepsa'], ['GALP', 'galp'], ['Q8 TEATINOS', 'q8'], ['SHELL', 'shell'], ['CARREFOUR', 'carrefour']];
+        // Los que vienen en el repositorio, con su origen anotado uno a uno:
+        // mira public/img/marcas/PROCEDENCIA.md
+        return [
+            ['REPSOL', 'repsol.svg'],
+            ['CEPSA', 'cepsa.svg'],
+            ['E.S. BP', 'bp.svg'],
+            ['GALP', 'galp.svg'],
+            ['Q8 TEATINOS', 'q8.svg'],
+            ['PLENOIL', 'plenoil.svg'],
+            ['CARREFOUR', 'carrefour.svg'],
+            // De Shell hay png (en color) y se prefiere al svg monocromo
+            ['SHELL', 'shell.png'],
+        ];
     }
 
     #[DataProvider('marcasConLogotipo')]
-    public function test_las_marcas_con_fichero_lo_encuentran(string $rotulo, string $clave): void
+    public function test_las_marcas_con_fichero_lo_encuentran(string $rotulo, string $fichero): void
     {
         /*
          * Guardián de la correspondencia entre la clave de la marca y el nombre
          * del fichero: si se renombra una o se borra el otro, el mapa se queda
          * con las iniciales sin decir nada.
          */
-        $this->assertSame("/img/marcas/$clave.svg", FuelBrand::for($rotulo)->logo);
+        $this->assertSame("/img/marcas/$fichero", FuelBrand::for($rotulo)->logo);
     }
 
     public function test_las_marcas_sin_fichero_no_tienen_logotipo(): void
     {
-        // Repsol no está porque en Commons sólo hay el logotipo de 1968; las
-        // otras, porque no hay ningún fichero con licencia comprobable.
-        foreach (['REPSOL', 'PETROPRIX', 'BALLENOIL', 'PLENOIL', 'E.S. LA PARRA'] as $rotulo) {
+        // Sus webs bloquean la descarga o su logotipo es demasiado alargado
+        // para leerse en la insignia: salen con las iniciales.
+        foreach (['PETROPRIX', 'BALLENOIL', 'MOEVE', 'AVIA', 'E.S. LA PARRA'] as $rotulo) {
             $this->assertNull(FuelBrand::for($rotulo)->logo, $rotulo);
         }
     }

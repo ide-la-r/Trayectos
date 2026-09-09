@@ -242,10 +242,13 @@ export default (config = {}) => ({
          * escrito y muy alargados. En un círculo se quedarían en una raya.
          *
          * Y hay un suelo de legibilidad: si al encajarlo su alto no llega a
-         * 11 px, no se usa y se vuelve a las iniciales. Es lo que pasa con el
-         * de BP, que mide diez a uno.
+         * 11 px, no se usa y se vuelve a las iniciales.
+         *
+         * El ancho máximo son 52 px por un caso concreto: el logotipo oficial
+         * de Repsol mide 4,27 a 1 y con 44 se quedaba en 10,3 px de alto, justo
+         * por debajo del suelo. Con 52 llega a 12,2 y se lee.
          */
-        const maxSlotW = 44 * ratio;
+        const maxSlotW = 52 * ratio;
         let slotW = slotH;
         let useLogo = false;
 
