@@ -32,6 +32,8 @@ escrito, que es lo que se lee en una insignia de 24 píxeles.
 | `galp.png` | Galp | `galp.com` (PNG de 256 px extraído de su favicon) |
 | `plenoil.svg` | Plenoil | `plenergy.es` (icono del sitio) |
 | `shell.png` | Shell | `shell.es` (icono para móviles) |
+| `ballenoil.png` | Ballenoil | Aportado por Ismael |
+| `petroprix.jpg` | Petroprix | Aportado por Ismael |
 
 Cepsa y Moeve comparten fichero porque **son la misma empresa**: Cepsa pasó a
 llamarse Moeve en 2026 y su web redirige. El Ministerio sigue publicando muchas
@@ -52,10 +54,12 @@ No hay ninguna licencia concedida ni relación con esas empresas. Si alguna
 pidiera que se retirase su logotipo, basta con borrar su fichero de esta
 carpeta: el mapa vuelve a poner las iniciales de esa marca y no se rompe nada.
 
+Ballenoil y Petroprix los trajo Ismael a mano: sus webs devuelven 403 hasta
+para el favicon y ni siquiera un navegador de verdad pasa de la pantalla de
+Cloudflare.
+
 ## Las que salen con iniciales
 
-- **Ballenoil**: su web está detrás de Cloudflare y no deja pasar.
-- **Petroprix**: el icono que declara su web no se puede descargar.
 - **Alcampo**: sólo publica un `.ico` de 48 px sin PNG dentro, que habría que
   decodificar a mano.
 - **Avia, Petronor, Campsa**: sus webs no responden a la descarga.

@@ -17,8 +17,9 @@ carrefour   alcampo     eroski      bonarea     disa
 avia        tamoil      esclatoil
 ```
 
-Es decir: `repsol.png`, `cepsa.png`, `bp.png`… Se admite `.png` y `.svg`, y se
-prefiere el `.png` si están los dos.
+Es decir: `repsol.png`, `cepsa.png`, `bp.png`… Se admite `.png`, `.svg`, `.jpg`
+y `.webp`, para no tener que convertir nada antes de dejarlo aquí. Si hubiera
+varios con el mismo nombre gana el `.png`, y luego el `.svg`.
 
 ## Cómo tienen que ser
 

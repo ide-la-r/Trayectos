@@ -101,8 +101,11 @@ class FuelBrandTest extends TestCase
             ['SHELL', 'shell.png'],
             ['GALP', 'galp.png'],
             ['MOEVE', 'moeve.png'],
+            ['BALLENOIL CHURRIANA', 'ballenoil.png'],
             // Cepsa se llama Moeve desde 2026: mismo símbolo
             ['CEPSA', 'cepsa.png'],
+            // En jpg, que es como se guarda un logotipo de una web sin pensarlo
+            ['PETROPRIX', 'petroprix.jpg'],
         ];
     }
 
@@ -121,14 +124,15 @@ class FuelBrandTest extends TestCase
     {
         // Sus webs bloquean la descarga o su logotipo es demasiado alargado
         // para leerse en la insignia: salen con las iniciales.
-        foreach (['PETROPRIX', 'BALLENOIL', 'AVIA', 'CAMPSA', 'E.S. LA PARRA'] as $rotulo) {
+        foreach (['AVIA', 'CAMPSA', 'PETRONOR', 'ALCAMPO', 'E.S. LA PARRA'] as $rotulo) {
             $this->assertNull(FuelBrand::for($rotulo)->logo, $rotulo);
         }
     }
 
-    public function test_si_alguien_pone_un_png_se_prefiere_al_svg(): void
+    public function test_si_alguien_deja_un_fichero_nuevo_se_usa(): void
     {
-        $ruta = public_path('img/marcas/petroprix.png');
+        // Avia no trae logotipo; se simula que alguien lo deja caer ahí
+        $ruta = public_path('img/marcas/avia.png');
 
         // Un PNG de 1x1 transparente, que es lo mínimo que se puede escribir
         file_put_contents($ruta, base64_decode(
@@ -138,7 +142,7 @@ class FuelBrandTest extends TestCase
         try {
             FuelBrand::forgetLogos();
 
-            $this->assertSame('/img/marcas/petroprix.png', FuelBrand::for('PETROPRIX')->logo);
+            $this->assertSame('/img/marcas/avia.png', FuelBrand::for('AVIA')->logo);
         } finally {
             @unlink($ruta);
             FuelBrand::forgetLogos();

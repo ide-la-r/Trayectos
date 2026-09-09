@@ -121,7 +121,10 @@ final class FuelBrand
             return self::$logos[$key];
         }
 
-        foreach (['png', 'svg'] as $extension) {
+        // Se admite lo que uno se encuentra al guardar un logotipo de una web,
+        // sin obligar a convertirlo antes. El orden es el de preferencia si
+        // hubiera varios del mismo nombre.
+        foreach (['png', 'svg', 'jpg', 'jpeg', 'webp'] as $extension) {
             $relative = self::LOGO_DIR.'/'.$key.'.'.$extension;
 
             if (is_file(public_path($relative))) {
