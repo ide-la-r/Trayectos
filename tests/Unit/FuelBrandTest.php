@@ -4,14 +4,24 @@ namespace Tests\Unit;
 
 use App\Support\FuelBrand;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 /**
  * La marca sale del rótulo porque el Ministerio no publica ese campo, y el
  * rótulo viene como lo declara cada estación.
+ *
+ * Arranca la aplicación aunque esté en tests/Unit: al buscar el logotipo se
+ * mira el disco, y para eso hace falta saber dónde está public.
  */
 class FuelBrandTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        FuelBrand::forgetLogos();
+    }
+
     public static function rotulosReales(): array
     {
         return [
@@ -73,6 +83,40 @@ class FuelBrandTest extends TestCase
 
             $this->assertSame('?', $marca->short);
             $this->assertNotSame('', $marca->key);
+        }
+    }
+
+    public function test_sin_ficheros_de_logotipo_no_hay_logotipo(): void
+    {
+        // El repositorio no trae ninguno: los logotipos de las petroleras son
+        // suyos y no se puede acreditar con qué licencia se meterían aquí.
+        $this->assertNull(FuelBrand::for('REPSOL')->logo);
+    }
+
+    public function test_si_alguien_pone_el_fichero_se_usa(): void
+    {
+        $ruta = public_path('img/marcas/repsol.png');
+        $yaExistia = is_file($ruta);
+
+        if (! $yaExistia) {
+            // Un PNG de 1x1 transparente, que es lo mínimo que se puede escribir
+            file_put_contents($ruta, base64_decode(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='
+            ));
+        }
+
+        try {
+            FuelBrand::forgetLogos();
+
+            $this->assertSame('/img/marcas/repsol.png', FuelBrand::for('REPSOL')->logo);
+            // Y las demás siguen sin logotipo: el fichero es por marca
+            $this->assertNull(FuelBrand::for('CEPSA')->logo);
+        } finally {
+            if (! $yaExistia) {
+                @unlink($ruta);
+            }
+
+            FuelBrand::forgetLogos();
         }
     }
 

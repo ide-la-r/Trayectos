@@ -101,6 +101,18 @@ export default (config = {}) => ({
                 if (! map.hasImage(brand.key)) {
                     map.addImage(brand.key, this.badge(brand), { pixelRatio: 2 });
                 }
+
+                /*
+                 * Si hay logotipo puesto, sustituye a la insignia de iniciales
+                 * en cuanto llegue. No se espera a que cargue: así el mapa sale
+                 * ya, y si el fichero falta o está mal la insignia se queda y
+                 * no se rompe nada.
+                 */
+                if (brand.logo) {
+                    this.loadLogo(brand)
+                        .then((image) => map.updateImage(brand.key, image))
+                        .catch(() => console.warn('Logotipo no cargado:', brand.logo));
+                }
             }
 
             map.addSource('gasolineras', {
@@ -201,13 +213,27 @@ export default (config = {}) => ({
         return [...brands.values()];
     },
 
+    /** Carga el logotipo de una marca y lo devuelve ya montado en su insignia. */
+    loadLogo(brand) {
+        return new Promise((resolve, reject) => {
+            const image = new Image();
+
+            image.onload = () => resolve(this.badge(brand, image));
+            image.onerror = reject;
+            image.src = brand.logo;
+        });
+    },
+
     /**
      * La insignia de una marca, dibujada en un canvas.
+     *
+     * Con logotipo: fondo blanco y el logotipo encajado dentro. Sin logotipo:
+     * el color de la marca y sus iniciales.
      *
      * A doble resolución y registrada con pixelRatio 2, que es lo que la deja
      * nítida en una pantalla de móvil.
      */
-    badge(brand) {
+    badge(brand, logo = null) {
         const ratio = 2;
         const side = 30 * ratio;
         const inset = 2 * ratio;
@@ -227,20 +253,40 @@ export default (config = {}) => ({
             ctx.rect(inset, inset, side - inset * 2, side - inset * 2);
         }
 
-        ctx.fillStyle = brand.bg;
+        // Con logotipo el fondo va blanco: un logotipo puede ser de cualquier
+        // color y sobre el color de la marca podría no verse.
+        ctx.fillStyle = logo ? '#ffffff' : brand.bg;
         ctx.fill();
 
-        // Borde blanco: es lo que mantiene la insignia legible sobre cualquier
-        // color del mapa, igual que el halo del precio.
+        // El borde es lo que mantiene la insignia legible sobre cualquier parte
+        // del mapa, igual que el halo del precio.
         ctx.lineWidth = 2 * ratio;
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = logo ? brand.bg : '#ffffff';
         ctx.stroke();
 
-        ctx.fillStyle = brand.ink;
-        ctx.font = `700 ${(brand.short.length > 2 ? 10 : 13) * ratio}px system-ui, -apple-system, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(brand.short, side / 2, side / 2 + ratio);
+        if (logo) {
+            // Encajado sin deformarlo. Un SVG sin tamaño propio declara 0, y de
+            // ahí el respaldo.
+            const pad = 4 * ratio;
+            const box = side - inset * 2 - pad * 2;
+            const width = logo.naturalWidth || logo.width || box;
+            const height = logo.naturalHeight || logo.height || box;
+            const scale = Math.min(box / width, box / height);
+
+            ctx.drawImage(
+                logo,
+                (side - width * scale) / 2,
+                (side - height * scale) / 2,
+                width * scale,
+                height * scale,
+            );
+        } else {
+            ctx.fillStyle = brand.ink;
+            ctx.font = `700 ${(brand.short.length > 2 ? 10 : 13) * ratio}px system-ui, -apple-system, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(brand.short, side / 2, side / 2 + ratio);
+        }
 
         return {
             width: side,

@@ -58,6 +58,12 @@ final class FuelBrand
     /** Para las que no se reconocen: gris y la primera letra del rótulo. */
     private const UNKNOWN = ['#525252', '#FFFFFF'];
 
+    /** Dónde buscar los logotipos, si alguien los pone. */
+    private const LOGO_DIR = 'img/marcas';
+
+    /** @var array<string, string|null> */
+    private static array $logos = [];
+
     /**
      * @return object{key: string, name: string, short: string, bg: string, ink: string}
      */
@@ -69,14 +75,17 @@ final class FuelBrand
 
         foreach (self::BRANDS as $pattern => [$name, $short, $bg, $ink]) {
             if (preg_match('/'.$pattern.'/u', $haystack) === 1) {
+                // La clave identifica la imagen dentro del mapa, así que tiene
+                // que ser estable y sin caracteres raros.
+                $key = Str::slug($name);
+
                 return (object) [
-                    // La clave identifica la imagen dentro del mapa, así que
-                    // tiene que ser estable y sin caracteres raros.
-                    'key' => Str::slug($name),
+                    'key' => $key,
                     'name' => $name,
                     'short' => $short,
                     'bg' => $bg,
                     'ink' => $ink,
+                    'logo' => self::logo($key),
                 ];
             }
         }
@@ -90,6 +99,42 @@ final class FuelBrand
             'short' => $initial,
             'bg' => self::UNKNOWN[0],
             'ink' => self::UNKNOWN[1],
+            'logo' => null,
         ];
+    }
+
+    /**
+     * El logotipo de la marca, si está puesto.
+     *
+     * Basta con dejar el fichero en public/img/marcas con el nombre de la
+     * clave —repsol.png, cepsa.png— y el mapa lo usa; si no está, dibuja la
+     * insignia con las iniciales. Aquí no viene ninguno: los logotipos de las
+     * petroleras son suyos y no se pueden meter en el repositorio sin poder
+     * acreditar con qué licencia.
+     *
+     * El resultado se guarda por clave: con cuatrocientas gasolineras de diez
+     * marcas serían cuatrocientas consultas al disco para diez respuestas.
+     */
+    private static function logo(string $key): ?string
+    {
+        if (array_key_exists($key, self::$logos)) {
+            return self::$logos[$key];
+        }
+
+        foreach (['png', 'svg'] as $extension) {
+            $relative = self::LOGO_DIR.'/'.$key.'.'.$extension;
+
+            if (is_file(public_path($relative))) {
+                return self::$logos[$key] = '/'.$relative;
+            }
+        }
+
+        return self::$logos[$key] = null;
+    }
+
+    /** Sólo para los tests: la caché de logotipos es estática. */
+    public static function forgetLogos(): void
+    {
+        self::$logos = [];
     }
 }

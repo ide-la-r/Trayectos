@@ -51,7 +51,7 @@
                      MapLibre va a la derecha; con el móvil ampliado hay que
                      esquivar la muesca. --}}
                 <button type="button" @click="toggleExpand()"
-                        :style="expanded ? 'top: max(0.75rem, env(safe-area-inset-top))' : 'top: 0.75rem'"
+                        :style="{ top: expanded ? 'max(0.75rem, env(safe-area-inset-top))' : '0.75rem' }"
                         class="absolute left-3 z-10 grid size-10 place-items-center rounded-lg border border-neutral-200 bg-white text-neutral-700 shadow-sm transition hover:bg-neutral-50"
                         :aria-label="expanded ? 'Salir de pantalla completa' : 'Ver el mapa a pantalla completa'">
                     <svg x-show="! expanded" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
@@ -65,8 +65,12 @@
                 {{-- ─── Ficha de la gasolinera tocada ──────────────────────────
                      Todo con x-text: los rótulos y las direcciones vienen de la
                      API del Ministerio y no entran como HTML en ningún caso. --}}
+                {{-- OJO con el :style: en forma de cadena reescribe el atributo
+                     entero y se lleva por delante el «display: none» que pone
+                     x-show, así que la ficha se veía vacía sobre el mapa. En
+                     forma de objeto Alpine toca sólo esa propiedad. --}}
                 <div x-show="chosen" x-cloak
-                     :style="expanded ? 'bottom: max(0.75rem, env(safe-area-inset-bottom))' : 'bottom: 0.75rem'"
+                     :style="{ bottom: expanded ? 'max(0.75rem, env(safe-area-inset-bottom))' : '0.75rem' }"
                      class="absolute inset-x-3 z-10 rounded-xl border border-neutral-200 bg-white p-3 shadow-lg sm:max-w-sm">
                     <div class="flex items-start gap-3">
                         <span class="grid size-9 shrink-0 place-items-center rounded-lg text-xs font-bold"
