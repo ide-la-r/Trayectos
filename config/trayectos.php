@@ -31,20 +31,20 @@ return [
     'miteco' => [
         'base_url' => env('MITECO_BASE_URL', 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes'),
         /*
-         * Ids de provincia del Ministerio. Por defecto Andalucía entera más
-         * Madrid, que es la otra ciudad donde hay alguien usando esto.
+         * Ids de provincia del Ministerio. Por defecto Granada, Málaga, Sevilla
+         * y Madrid: los sitios donde de verdad hay alguien repostando.
          *
          * Lista vacía => descarga nacional. Medido contra la API real el
          * 09-09-2026: España son 11.493 estaciones y 28.858 filas de precio
          * por sincronización, o sea 22,6 MB al día y 677 MB en treinta días.
          * El plan gratuito de Neon son 500 MB en total, así que no cabe.
-         * Andalucía son 2.121 estaciones y 4,1 MB al día, y Madrid otras 895
-         * y 1,8 MB: juntas, 265 MB —la mitad del plan— con los 45
-         * días que se guardan. Sólo Málaga serían 308 estaciones y 0,6 MB.
+         * Estas cuatro son 1.930 estaciones y 3,8 MB al día: 172 MB con los 45
+         * días que se guardan, un tercio del plan. Andalucía entera más Madrid
+         * serían 3.016 estaciones y 265 MB, que también cabrían.
          */
         'provinces' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env('MITECO_PROVINCES', '04,11,14,18,21,23,28,29,41'))
+            explode(',', (string) env('MITECO_PROVINCES', '18,28,29,41'))
         ))),
         'timeout' => 120,
     ],

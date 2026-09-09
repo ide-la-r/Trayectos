@@ -198,7 +198,7 @@ class FuelAreaTest extends TestCase
             $this->precio($this->estacion('Gasolinera '.$i, self::CENTRO_LAT + $i * 0.005, self::CENTRO_LON), 1500 + $i);
         }
 
-        // Sin zona no se manda nada: serían las 3.016 estaciones sincronizadas
+        // Sin zona no se manda nada: serían las 1.930 estaciones sincronizadas
         $this->actingAs($user)
             ->get(route('prices'))
             ->assertOk()
@@ -391,8 +391,8 @@ class FuelAreaTest extends TestCase
         $user = User::factory()->create();
 
         /*
-         * Son nueve provincias sincronizadas: una fila de comas sin la «y» del
-         * final no se acaba nunca, parece que la frase se ha cortado.
+         * Una fila de comas sin la «y» del final no se acaba nunca: parece que
+         * la frase se ha cortado a la mitad.
          */
         $this->precio($this->estacion('Repsol Mostoles', 40.3223, -3.8649, 'Móstoles', 'MADRID', '28'), 1500);
         $this->precio($this->estacion('Repsol Teatinos', self::CENTRO_LAT, self::CENTRO_LON), 1500);

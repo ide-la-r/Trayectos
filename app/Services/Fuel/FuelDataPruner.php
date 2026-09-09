@@ -22,9 +22,9 @@ final class FuelDataPruner
     /**
      * La pantalla enseña 30 días; se guardan 45 para tener margen.
      *
-     * Con Andalucía entera y Madrid son unos 5,9 MB al día, así que 45 días
-     * son 265 MB de los 500 del plan gratuito. Con 90 días serían 530 MB y no
-     * cabrían: el histórico que nadie mira dejaría fuera lo que sí se usa.
+     * Con las cuatro provincias que se sincronizan son unos 3,8 MB al día, así
+     * que 45 días son 172 MB de los 500 del plan gratuito. Con 90 días serían
+     * 344 MB: dos tercios de la base de datos para un histórico que nadie mira.
      */
     public const KEEP_DAYS = 45;
 

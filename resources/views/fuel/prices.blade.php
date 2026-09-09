@@ -6,7 +6,7 @@
     $km = fn (float $value) => number_format($value, $value < 100 ? 1 : 0, ',', '.');
 
     // El Ministerio las publica en mayúsculas («MÁLAGA»). Van con «y» al final:
-    // son nueve nombres y una lista de comas seguidas no se acaba nunca.
+    // una fila de comas sin ella parece una frase cortada a la mitad.
     $provinciasCubiertas = $provinces
         ->map(fn (string $p) => \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower($p)))
         ->join(', ', ' y ');

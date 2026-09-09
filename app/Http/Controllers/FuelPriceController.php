@@ -58,7 +58,7 @@ class FuelPriceController extends Controller
                 ? $history->nearestStation($area)
                 : null,
             // El mapa necesita un dónde. Sin zona no se manda nada: serían las
-            // 3.016 estaciones sincronizadas viajando con la página.
+            // 1.930 estaciones sincronizadas viajando con la página.
             'mapStations' => $kind && $area
                 ? $history->stationsForMap($kind, $area)
                 : collect(),
