@@ -26,8 +26,8 @@ Instalable en el móvil como aplicación (PWA), también en iOS y sin pasar por 
   de pagos.
 - **Motor de decisión**: sugiere al próximo conductor priorizando la mayor deuda, filtrando por quién
   tiene coche con plazas suficientes y desempatando por turnos recientes.
-- **Calibración con repostajes reales**: el modelo se ajusta al coche concreto comparando lo previsto
-  con lo que se echa de verdad al depósito.
+- **Consumo real medido de lleno a lleno**: con el cuentakilómetros de cada llenado sale lo que gasta
+  el coche de verdad, sin fiarse de la ficha ni del modelo, y con eso se calibra el cálculo.
 
 ## Documentación
 

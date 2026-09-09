@@ -125,10 +125,40 @@ return [
     */
 
     'calibration' => [
-        'min_refuels' => 3,
+        // Dos depositos completos son tres llenados: el que abre y los dos que
+        // cierran cada tramo.
+        'min_tanks' => 2,
         'min_factor' => 0.750,
         'max_factor' => 1.350,
         'lookback_days' => 180,
+        /*
+         * Que parte de los kilometros conducidos tiene que estar apuntada como
+         * viajes para que el ritmo del modelo signifique algo. No hace falta
+         * apuntarlo todo —comparar litros por cada cien kilometros a los dos
+         * lados se encarga de eso—, pero con un viaje suelto no hay muestra.
+         */
+        'min_trip_coverage' => 0.25,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Consumo real, medido de lleno a lleno
+    |--------------------------------------------------------------------------
+    |
+    | Limites para descartar un deposito que no puede ser. Casi siempre es un
+    | cuentakilometros mal tecleado: un cero de mas convierte un deposito
+    | normal en cuarenta mil kilometros con cincuenta litros, y ese dato solo
+    | entra para destrozar la media.
+    |
+    */
+
+    'real_consumption' => [
+        'min_tank_km' => 50,
+        'max_tank_km' => 2000,
+        'min_litres_per_100' => 1.0,
+        'max_litres_per_100' => 40.0,
+        'min_kwh_per_100' => 5.0,
+        'max_kwh_per_100' => 100.0,
     ],
 
     /*

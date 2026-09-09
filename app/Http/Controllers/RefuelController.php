@@ -54,14 +54,54 @@ class RefuelController extends Controller
             'full_tank' => (bool) ($data['full_tank'] ?? true),
         ]);
 
-        // Cada repostaje real acerca el modelo a este coche concreto
-        $result = $calibration->recalculate($vehicle);
+        // Cada llenado completo con su cuentakilómetros acerca el modelo a este
+        // coche concreto
+        return back()->with('status', $this->tell($calibration->recalculate($vehicle)));
+    }
 
-        $message = $result
-            ? sprintf('Repostaje apuntado. El modelo se ha ajustado al %+.1f %% (factor %.3f).',
-                ($result['factor'] - 1) * 100, $result['factor'])
-            : 'Repostaje apuntado. Con un par más el sistema podrá ajustar el consumo real de este coche.';
+    /**
+     * Lo que se le cuenta a quien acaba de apuntar el repostaje.
+     *
+     * El consumo real se dice siempre que se sepa, aunque no se haya podido
+     * calibrar: es el dato que uno quiere ver, y no depende de nada más que de
+     * haber llenado dos veces con el cuentakilómetros apuntado.
+     *
+     * @param  array<string, mixed>  $result
+     */
+    private function tell(array $result): string
+    {
+        $real = $this->realConsumption($result);
 
-        return back()->with('status', $message);
+        if ($real === null) {
+            return 'Repostaje apuntado. Apunta el cuentakilómetros al llenar y con dos '
+                .'llenados completos sabré lo que gasta de verdad.';
+        }
+
+        return match ($result['status']) {
+            'calibrated' => sprintf(
+                'Repostaje apuntado. %s, y el cálculo se ha ajustado un %+.1f %% (factor %.3f).',
+                $real,
+                ((float) $result['factor'] - 1) * 100,
+                $result['factor'],
+            ),
+            'thin_sample' => "Repostaje apuntado. $real. Con más viajes apuntados podré ajustar también el cálculo.",
+            'no_trips' => "Repostaje apuntado. $real. Cuando haya viajes apuntados ajustaré el cálculo con ellos.",
+            default => "Repostaje apuntado. $real.",
+        };
+    }
+
+    /**
+     * «Tu coche hace 6,5 L/100 km de verdad», con la unidad que le toque.
+     *
+     * @param  array<string, mixed>  $result
+     */
+    private function realConsumption(array $result): ?string
+    {
+        $figures = collect(['litres_per_100' => 'L', 'kwh_per_100' => 'kWh'])
+            ->filter(fn (string $unit, string $key) => ($result[$key] ?? null) !== null)
+            ->map(fn (string $unit, string $key) => number_format((float) $result[$key], 1, ',', '.').' '.$unit)
+            ->implode(' + ');
+
+        return $figures === '' ? null : "Tu coche hace $figures/100 km de verdad";
     }
 }

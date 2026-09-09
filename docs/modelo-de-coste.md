@@ -92,17 +92,45 @@ es el gasto absoluto. Donde el híbrido gana de verdad es en el regreso, recuper
 bajada frente al 5 % del gasolina. Está cubierto en
 [`TripCostCalculatorTest`](../tests/Unit/TripCostCalculatorTest.php).
 
+## Consumo real, medido de lleno a lleno
+
+De un llenado completo al siguiente hay una medida que no depende de nada más: el depósito estaba
+lleno, se han recorrido unos kilómetros y lo que ha cabido al volver a llenarlo es exactamente lo
+que se ha gastado en ellos. Ni modelo físico, ni viajes apuntados, ni creerse la ficha.
+
+```
+consumo real = Σ litros del depósito / Δ cuentakilómetros × 100
+```
+
+Los repostajes parciales de en medio cuentan: también entraron en ese depósito. Un depósito de menos
+de 50 km o de más de 2.000, o que dé un consumo fuera de banda, se descarta entero — casi siempre es
+un cuentakilómetros mal tecleado, y un cero de más se lleva la media por delante.
+
 ## Calibración
 
-Cualquier modelo con eficiencias fijas se equivoca. En vez de discutirlo, el sistema compara los
-repostajes reales con lo que predijo para los viajes de ese mismo periodo:
+Cualquier modelo con eficiencias fijas se equivoca. En vez de discutirlo, el sistema compara el
+consumo real con el que predijo para los viajes de ese mismo periodo:
 
 ```
-factor = Σ litros reales / Σ litros previstos        (mínimo 3 llenados completos)
+factor = (litros reales / km conducidos) / (litros previstos / km apuntados)
 ```
+
+**Se comparan ritmos, no totales, y ésa es la parte que importa.** Dividir todo lo repostado entre
+lo previsto para los viajes apuntados metía cada kilómetro sin apuntar —ir a trabajar, la compra— en
+el numerador y no en el denominador: el factor subía sin que el coche gastara de más, y apuntando la
+mitad de lo que se conduce ya se clavaba en el tope de 1,350, un 35 % de más en todos los viajes
+siguientes. Midiendo por cada cien kilómetros a los dos lados, lo que no se apunta se va solo de la
+cuenta.
+
+Hacen falta dos depósitos medidos (tres llenados con cuentakilómetros) y que los viajes apuntados
+cubran al menos el 25 % de los kilómetros conducidos: por debajo de ahí el ritmo del modelo lo marca
+un viaje suelto y no representa nada, así que **no se calibra y se dice por qué**. El consumo real
+se enseña igual, que para eso no hace falta ningún viaje.
 
 Acotado a `[0,750 , 1,350]` para que un dato mal introducido no desmadre la contabilidad, y con una
-ventana de 180 días.
+ventana de 180 días. Queda una suposición, y conviene tenerla a la vista: que los viajes apuntados
+se parecen al resto de la conducción. Si lo apuntado es todo autovía y lo demás todo ciudad, el
+factor sale sesgado.
 
 ## Inmutabilidad
 

@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\FuelKind;
 use App\Enums\Powertrain;
 use App\Models\Vehicle;
+use App\Services\Costing\RealConsumption;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,13 +38,18 @@ class VehicleController extends Controller
         return redirect()->route('vehicles.index')->with('status', 'Coche guardado.');
     }
 
-    public function edit(Request $request, Vehicle $vehicle): View
+    public function edit(Request $request, Vehicle $vehicle, RealConsumption $real): View
     {
         abort_unless($vehicle->owner_id === $request->user()->id, 403);
+
+        $tanks = $real->tanks($vehicle);
 
         return view('vehicles.form', [
             'vehicle' => $vehicle,
             'refuels' => $vehicle->refuels()->latest('refuelled_on')->limit(10)->get(),
+            // Cada depósito medido va colgado del repostaje que lo cierra
+            'tanks' => $tanks->keyBy('refuelId'),
+            'consumption' => $real->summarise($tanks),
         ]);
     }
 

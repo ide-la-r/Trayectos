@@ -133,7 +133,8 @@
                     <div class="rounded-xl bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
                         Factor de calibración actual:
                         <span class="font-semibold">×{{ number_format($vehicle->calibration_factor, 3, ',', '.') }}</span>.
-                        Se ajusta solo con los repostajes que apuntes.
+                        Se ajusta solo comparando lo que gastas de verdad con lo que el modelo
+                        predijo para tus viajes.
                     </div>
 
                     <label class="flex items-center gap-3">
@@ -155,10 +156,35 @@
         <section class="card mt-4">
             <h2 class="text-sm font-semibold text-neutral-900">Repostajes reales</h2>
             <p class="mt-1 text-xs text-neutral-500">
-                Apunta lo que echas de verdad al depósito. Con tres llenados completos el sistema compara lo
-                previsto con lo real y ajusta el consumo de este coche: se acaba la discusión de «mi coche no
-                gasta eso».
+                Apunta lo que echas al depósito <strong>con el cuentakilómetros</strong>. De un llenado
+                completo al siguiente sale lo que gasta este coche de verdad, sin fiarse de la ficha ni del
+                modelo: se acaba la discusión de «mi coche no gasta eso».
             </p>
+
+            @php
+                // Se componen enteras y no a trozos: partirlas en varios @if deja
+                // saltos de línea dentro del número y se lee «6,5 L /100 km».
+                $porCien = fn (?float $litres, ?float $kwh) => collect([
+                    $litres ? number_format($litres, 1, ',', '.').' L' : null,
+                    $kwh ? number_format($kwh, 1, ',', '.').' kWh' : null,
+                ])->filter()->implode(' + ');
+
+                $real = $porCien($consumption['litres'], $consumption['kwh']);
+            @endphp
+
+            @if ($real !== '')
+                <div class="mt-3 rounded-xl bg-neutral-900 px-4 py-3 text-white">
+                    <p class="text-xs text-neutral-400">Consumo real de este coche</p>
+                    <p class="mt-0.5 text-2xl font-semibold tracking-tight tabular-nums">{{ $real }}<span
+                            class="text-sm font-normal text-neutral-400">/100 km</span></p>
+                    <p class="mt-1 text-xs text-neutral-400">
+                        {{ 'Medido en '.$consumption['tanks'].' '
+                            .\Illuminate\Support\Str::plural('depósito', $consumption['tanks'])
+                            .' y '.number_format($consumption['km'], 0, ',', '.').' km' }}
+                        · la ficha dice {{ $vehicle->consumptionLabel() }}
+                    </p>
+                </div>
+            @endif
 
             <form method="POST" action="{{ route('refuels.store', $vehicle) }}" class="mt-3 space-y-3">
                 @csrf
@@ -211,9 +237,24 @@
             @if (isset($refuels) && $refuels->isNotEmpty())
                 <div class="mt-4 divide-y divide-neutral-100 border-t border-neutral-100 pt-2">
                     @foreach ($refuels as $refuel)
-                        <div class="flex items-center justify-between gap-3 py-2 text-xs">
-                            <span class="text-neutral-600">{{ $refuel->refuelled_on->format('d/m/Y') }}</span>
-                            <span class="text-neutral-800">
+                        @php($tank = $tanks[$refuel->id] ?? null)
+
+                        <div class="flex items-start justify-between gap-3 py-2 text-xs">
+                            <div class="min-w-0">
+                                <span class="text-neutral-600">{{ $refuel->refuelled_on->format('d/m/Y') }}</span>
+
+                                {{-- El depósito que cierra este repostaje, si se ha podido medir --}}
+                                @if ($tank)
+                                    <span class="mt-0.5 block text-neutral-500">{{
+                                        $porCien($tank->litresPer100(), $tank->kwhPer100())
+                                            .'/100 km en '.number_format($tank->km, 0, ',', '.').' km'
+                                    }}</span>
+                                @elseif ($refuel->full_tank && ! $refuel->odometer_km)
+                                    <span class="mt-0.5 block text-neutral-400">Sin cuentakilómetros</span>
+                                @endif
+                            </div>
+
+                            <span class="shrink-0 text-right text-neutral-800">
                                 @if ($refuel->litres)
                                     {{ number_format($refuel->litres, 2, ',', '.') }} L
                                 @endif
