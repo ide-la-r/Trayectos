@@ -1,5 +1,5 @@
 import { directionsUrl } from './map-links';
-import loadMaplibre, { MAP_FONT, MAP_STYLE } from './maplibre-loader';
+import loadMaplibre, { MAP_STYLE } from './maplibre-loader';
 
 /**
  * Mapa de gasolineras: la marca de cada una y su precio, escritos encima.
@@ -95,24 +95,39 @@ export default (config = {}) => ({
         map.on('error', (event) => console.warn('Mapa de gasolineras:', event.error?.message ?? event));
 
         const paint = () => {
-            // Una insignia por marca, no por gasolinera: en una zona con
-            // cuarenta Repsol se dibuja una sola imagen.
+            /*
+             * Un marcador entero por combinación de marca, precio y nivel: la
+             * burbuja lleva el precio dentro, así que su ancho depende del
+             * texto y no se puede reutilizar una sola imagen para todas. Dos
+             * gasolineras de la misma marca al mismo precio comparten imagen.
+             */
+            for (const station of stations) {
+                station.marker = `${station.brand.key}|${station.price}|${station.tier}`;
+
+                if (! map.hasImage(station.marker)) {
+                    map.addImage(station.marker, this.bubble(station), { pixelRatio: 2 });
+                }
+            }
+
+            /*
+             * Si hay logotipo puesto, se rehacen las burbujas de esa marca en
+             * cuanto llegue. No se espera a que cargue: así el mapa sale ya, y
+             * si el fichero falta o está mal se quedan las iniciales y no se
+             * rompe nada. Las medidas no cambian —dependen del precio, no del
+             * logotipo—, que es lo que exige updateImage.
+             */
             for (const brand of this.uniqueBrands(stations)) {
-                if (! map.hasImage(brand.key)) {
-                    map.addImage(brand.key, this.badge(brand), { pixelRatio: 2 });
+                if (! brand.logo) {
+                    continue;
                 }
 
-                /*
-                 * Si hay logotipo puesto, sustituye a la insignia de iniciales
-                 * en cuanto llegue. No se espera a que cargue: así el mapa sale
-                 * ya, y si el fichero falta o está mal la insignia se queda y
-                 * no se rompe nada.
-                 */
-                if (brand.logo) {
-                    this.loadLogo(brand)
-                        .then((image) => map.updateImage(brand.key, image))
-                        .catch(() => console.warn('Logotipo no cargado:', brand.logo));
-                }
+                this.loadLogo(brand)
+                    .then((logo) => {
+                        for (const station of stations.filter((s) => s.brand.key === brand.key)) {
+                            map.updateImage(station.marker, this.bubble(station, logo));
+                        }
+                    })
+                    .catch(() => console.warn('Logotipo no cargado:', brand.logo));
             }
 
             map.addSource('gasolineras', {
@@ -125,52 +140,22 @@ export default (config = {}) => ({
                         // Planas a propósito: MapLibre convierte a texto
                         // cualquier propiedad que no sea un valor simple, así
                         // que un objeto anidado llegaría inservible.
-                        properties: {
-                            index,
-                            brandKey: s.brand.key,
-                            price: s.price,
-                            tier: s.tier,
-                        },
+                        properties: { index, marker: s.marker },
                     })),
                 },
             });
 
-            /*
-             * El color del precio va por tercios de posición en el ranking, no
-             * por rango: una gasolinera disparatada arrastraría a las demás al
-             * nivel «barata». El nivel lo calcula el servidor.
-             *
-             * Y el color no es la información: el número está escrito ahí
-             * mismo, así que quien no distinga verde de rojo lee lo mismo.
-             */
-            const byTier = [
-                'match', ['get', 'tier'],
-                0, '#15803d',   // credit-700: de las baratas
-                2, '#b91c1c',   // debt-700: de las caras
-                '#404040',      // neutral-700: en la media
-            ];
-
+            // La burbuja ya lleva el precio dentro, así que no hay capa de
+            // texto: un solo símbolo por gasolinera, y MapLibre esconde los
+            // que se pisan igual que antes.
             map.addLayer({
                 id: 'gasolineras',
                 type: 'symbol',
                 source: 'gasolineras',
                 layout: {
-                    'icon-image': ['get', 'brandKey'],
+                    'icon-image': ['get', 'marker'],
                     'icon-anchor': 'bottom',
                     'icon-allow-overlap': false,
-                    'text-field': ['get', 'price'],
-                    'text-font': MAP_FONT,
-                    'text-size': 12,
-                    'text-anchor': 'top',
-                    'text-offset': [0, 0.25],
-                    // El icono y el precio son un solo símbolo: o entran los
-                    // dos o no entra ninguno, y nunca se separan.
-                    'text-optional': false,
-                },
-                paint: {
-                    'text-color': byTier,
-                    'text-halo-color': '#ffffff',
-                    'text-halo-width': 1.6,
                 },
             });
 
@@ -213,12 +198,11 @@ export default (config = {}) => ({
         return [...brands.values()];
     },
 
-    /** Carga el logotipo de una marca y lo devuelve ya montado en su insignia. */
     loadLogo(brand) {
         return new Promise((resolve, reject) => {
             const image = new Image();
 
-            image.onload = () => resolve(this.badge(brand, image));
+            image.onload = () => resolve(image);
             image.onerror = reject;
             image.src = brand.logo;
         });
@@ -233,90 +217,114 @@ export default (config = {}) => ({
      * A doble resolución y registrada con pixelRatio 2, que es lo que la deja
      * nítida en una pantalla de móvil.
      */
-    badge(brand, logo = null) {
+    bubble(station, logo = null) {
         const ratio = 2;
-        const w = 32 * ratio;          // cuerpo
-        const body = 30 * ratio;
+        const h = 32 * ratio;
         const tip = 7 * ratio;         // pico que señala el sitio exacto
-        const h = body + tip;
-        const pad = 3 * ratio;
+        const dot = 24 * ratio;        // círculo de la marca
+        const padL = 4 * ratio;
+        const gap = 6 * ratio;
+        const padR = 10 * ratio;
+        const pad = 3 * ratio;         // aire para que la sombra no se corte
+        const font = `600 ${13 * ratio}px system-ui, -apple-system, sans-serif`;
+
+        // El ancho depende del precio, así que hay que medirlo antes de saber
+        // de qué tamaño es el lienzo.
+        const ruler = document.createElement('canvas').getContext('2d');
+        ruler.font = font;
+        const textWidth = Math.ceil(ruler.measureText(station.price).width);
+
+        const w = padL + dot + gap + textWidth + padR;
 
         const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
+        canvas.width = w + pad * 2;
+        canvas.height = h + tip + pad;
 
         const ctx = canvas.getContext('2d');
 
-        /*
-         * Un cartel con pico abajo y no un cuadrado suelto: el pico señala la
-         * gasolinera y la sombra lo despega del mapa. Es lo que hace que se lea
-         * como un marcador y no como un cuadro de color puesto ahí.
-         */
-        const r = 8 * ratio;
         const left = pad;
-        const right = w - pad;
+        const right = pad + w;
         const top = pad;
-        const bottom = body - pad;
-        const mid = w / 2;
+        const bottom = pad + h;
+        const r = h / 2;
+        const mid = pad + w / 2;
 
+        // Pastilla con el pico abajo, en el centro para que icon-anchor
+        // «bottom» lo clave en la coordenada sin tener que compensar nada.
         ctx.beginPath();
         ctx.moveTo(left + r, top);
         ctx.lineTo(right - r, top);
-        ctx.quadraticCurveTo(right, top, right, top + r);
-        ctx.lineTo(right, bottom - r);
-        ctx.quadraticCurveTo(right, bottom, right - r, bottom);
-        ctx.lineTo(mid + tip * 0.7, bottom);
-        ctx.lineTo(mid, h - pad);
-        ctx.lineTo(mid - tip * 0.7, bottom);
+        ctx.arc(right - r, top + r, r, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(mid + tip * 0.62, bottom);
+        ctx.lineTo(mid, bottom + tip);
+        ctx.lineTo(mid - tip * 0.62, bottom);
         ctx.lineTo(left + r, bottom);
-        ctx.quadraticCurveTo(left, bottom, left, bottom - r);
-        ctx.lineTo(left, top + r);
-        ctx.quadraticCurveTo(left, top, left + r, top);
+        ctx.arc(left + r, top + r, r, Math.PI / 2, -Math.PI / 2);
         ctx.closePath();
 
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
         ctx.shadowBlur = 3 * ratio;
         ctx.shadowOffsetY = 1 * ratio;
-
-        // Con logotipo el fondo va blanco: un logotipo puede ser de cualquier
-        // color y sobre el color de la marca podría no verse.
-        ctx.fillStyle = logo ? '#ffffff' : brand.bg;
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
 
-        // Se quita la sombra antes del borde y del contenido, que si no la
-        // heredan y sale todo emborronado.
+        // Se apaga la sombra antes del borde y del contenido: si no, la heredan
+        // y sale todo emborronado.
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
-        ctx.lineWidth = 1.5 * ratio;
-        ctx.strokeStyle = logo ? brand.bg : 'rgba(255, 255, 255, 0.9)';
+        /*
+         * El nivel de precio va en el BORDE y no en el número, que es lo que
+         * hace legible la burbuja: verde de las baratas, ámbar en la media,
+         * rojo de las caras. Y sigue sin ser la información —el precio está
+         * escrito dentro— así que quien no distinga los colores lee lo mismo.
+         */
+        ctx.lineWidth = 2 * ratio;
+        ctx.strokeStyle = { 0: '#15803d', 2: '#b91c1c' }[station.tier] ?? '#d97706';
         ctx.stroke();
 
-        const cx = mid;
-        const cy = (top + bottom) / 2;
+        // ── Círculo de la marca ─────────────────────────────────────────────
+        const cx = left + padL + dot / 2;
+        const cy = top + h / 2;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, dot / 2, 0, Math.PI * 2);
+        ctx.fillStyle = logo ? '#ffffff' : station.brand.bg;
+        ctx.fill();
+        ctx.clip();
 
         if (logo) {
             // Encajado sin deformarlo. Un SVG sin tamaño propio declara 0, y de
             // ahí el respaldo.
-            const box = bottom - top - 4 * ratio;
+            const box = dot - 2 * ratio;
             const iw = logo.naturalWidth || logo.width || box;
             const ih = logo.naturalHeight || logo.height || box;
             const scale = Math.min(box / iw, box / ih);
 
             ctx.drawImage(logo, cx - (iw * scale) / 2, cy - (ih * scale) / 2, iw * scale, ih * scale);
         } else {
-            ctx.fillStyle = brand.ink;
-            ctx.font = `700 ${(brand.short.length > 2 ? 10 : 13) * ratio}px system-ui, -apple-system, sans-serif`;
+            ctx.fillStyle = station.brand.ink;
+            ctx.font = `700 ${(station.brand.short.length > 2 ? 9 : 11) * ratio}px system-ui, -apple-system, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(brand.short, cx, cy + ratio * 0.5);
+            ctx.fillText(station.brand.short, cx, cy + ratio * 0.5);
         }
 
+        ctx.restore();
+
+        // ── Precio ──────────────────────────────────────────────────────────
+        ctx.fillStyle = '#171717';
+        ctx.font = font;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(station.price, left + padL + dot + gap, cy + ratio * 0.5);
+
         return {
-            width: w,
-            height: h,
-            data: ctx.getImageData(0, 0, w, h).data,
+            width: canvas.width,
+            height: canvas.height,
+            data: ctx.getImageData(0, 0, canvas.width, canvas.height).data,
         };
     },
 

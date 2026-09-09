@@ -49,10 +49,3 @@ export default function loadMaplibre() {
  * hacía que la pantalla pareciera a medio hacer.
  */
 export const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
-
-/**
- * El estilo trae sus fuentes tipográficas como glifos; ésta es la única que se
- * puede dar por segura en positron y hace falta nombrarla para escribir texto
- * sobre el mapa.
- */
-export const MAP_FONT = ['Noto Sans Regular'];
