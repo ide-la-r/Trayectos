@@ -444,9 +444,16 @@
                         @elseif ($provinciasCubiertas !== '')
                             De {{ $provinciasCubiertas }}.
                         @endif
-                        El mapa llega en la próxima entrega.
+                        Los precios los publica cada estación; el Ministerio los recoge.
                     </p>
                 </section>
+
+                {{-- El mapa va detrás del listado a propósito: el listado ya
+                     responde «dónde está más barato» en texto y funciona sin
+                     descargar nada. El mapa es para mirar la zona. --}}
+                @if ($area && $mapStations->isNotEmpty())
+                    <x-fuel-map :stations="$mapStations" :area="$area" />
+                @endif
             @endif
         @endif
     @endif

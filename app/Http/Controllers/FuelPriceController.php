@@ -57,6 +57,11 @@ class FuelPriceController extends Controller
             'nearest' => $area && $summary?->latest === null
                 ? $history->nearestStation($area)
                 : null,
+            // El mapa necesita un dónde. Sin zona no se manda nada: serían las
+            // 2.120 estaciones de Andalucía viajando con la página.
+            'mapStations' => $kind && $area
+                ? $history->stationsForMap($kind, $area)
+                : collect(),
         ]);
     }
 

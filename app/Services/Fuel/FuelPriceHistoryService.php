@@ -178,6 +178,50 @@ final class FuelPriceHistoryService
     }
 
     /**
+     * Las gasolineras de la zona, listas para pintarlas en el mapa.
+     *
+     * Sólo con zona: sin ella el ámbito son las provincias sincronizadas —2.120
+     * estaciones en Andalucía— y eso no es un mapa, es una mancha; además serían
+     * cientos de kilobytes viajando con la página para nada.
+     *
+     * @return Collection<int, object>
+     */
+    public function stationsForMap(FuelKind $kind, FuelArea $area, int $limit = 400): Collection
+    {
+        $stations = $this->cheapestStations($kind, $limit, $area)
+            ->filter(fn (object $row) => $row->lat !== null && $row->lon !== null)
+            ->values();
+
+        // Vienen ordenadas de más barata a más cara, así que el nivel sale de
+        // la posición y no del precio: una gasolinera con un precio disparatado
+        // arrastraría a todas las demás al nivel «barata» si se midiera por
+        // rango.
+        $total = $stations->count();
+        $cheapestThird = (int) ceil($total / 3);
+        $dearestThird = $total - $cheapestThird;
+
+        return $stations->map(fn (object $row, int $position) => (object) [
+            'lat' => (float) $row->lat,
+            'lon' => (float) $row->lon,
+            'label' => $row->label ?: 'Estación sin rótulo',
+            'municipality' => $row->municipality,
+            'address' => $row->address,
+            'price' => number_format($row->price_milli / 1000, 3, ',', '.'),
+            'unit' => $kind->unit(),
+            'distance' => $row->distance_km === null
+                ? null
+                : number_format($row->distance_km, 1, ',', '.'),
+            'tier' => match (true) {
+                // Con dos o menos no hay ranking que enseñar
+                $total < 3 => 1,
+                $position < $cheapestThird => 0,
+                $position >= $dearestThird => 2,
+                default => 1,
+            },
+        ]);
+    }
+
+    /**
      * Qué provincias hay de verdad en la copia local, por su nombre.
      *
      * Se leen de los datos y no de la configuración a propósito: «29» no le

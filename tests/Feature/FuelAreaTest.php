@@ -124,6 +124,98 @@ class FuelAreaTest extends TestCase
             ->assertSee('aria-label="Cómo llegar a La de al lado"', false);
     }
 
+    public function test_el_mapa_reparte_las_gasolineras_en_tercios_por_precio(): void
+    {
+        // Nueve gasolineras, todas cerca, con precios de 1500 a 1580
+        foreach (range(0, 8) as $i) {
+            $estacion = $this->estacion('Gasolinera '.$i, self::CENTRO_LAT + $i * 0.005, self::CENTRO_LON);
+            $this->precio($estacion, 1500 + $i * 10);
+        }
+
+        $mapa = $this->history()->stationsForMap(FuelKind::Diesel, $this->zona());
+
+        $this->assertCount(9, $mapa);
+        // Vienen de más barata a más cara
+        $this->assertSame('1,500', $mapa->first()->price);
+        $this->assertSame('1,580', $mapa->last()->price);
+        // Tres baratas, tres en la media, tres caras
+        $this->assertSame([0, 0, 0, 1, 1, 1, 2, 2, 2], $mapa->pluck('tier')->all());
+    }
+
+    public function test_un_precio_disparatado_no_arrastra_a_las_demas(): void
+    {
+        // Ocho normales y una carísima. Si el nivel se midiera por rango de
+        // precio, las ocho normales caerían todas en «de las más baratas».
+        foreach (range(0, 7) as $i) {
+            $this->precio($this->estacion('Normal '.$i, self::CENTRO_LAT + $i * 0.005, self::CENTRO_LON), 1500 + $i);
+        }
+        $this->precio($this->estacion('Carisima', self::CENTRO_LAT + 0.05, self::CENTRO_LON), 4000);
+
+        $niveles = $this->history()->stationsForMap(FuelKind::Diesel, $this->zona())->pluck('tier');
+
+        // Siguen repartidas en tres grupos de tres
+        $this->assertSame(3, $niveles->filter(fn (int $t) => $t === 0)->count());
+        $this->assertSame(3, $niveles->filter(fn (int $t) => $t === 1)->count());
+        $this->assertSame(3, $niveles->filter(fn (int $t) => $t === 2)->count());
+    }
+
+    public function test_con_menos_de_tres_no_hay_ranking_que_ensenar(): void
+    {
+        $this->precio($this->estacion('Una', self::CENTRO_LAT + 0.01, self::CENTRO_LON), 1500);
+        $this->precio($this->estacion('Otra', self::CENTRO_LAT + 0.02, self::CENTRO_LON), 1700);
+
+        $niveles = $this->history()->stationsForMap(FuelKind::Diesel, $this->zona())->pluck('tier');
+
+        $this->assertSame([1, 1], $niveles->all());
+    }
+
+    public function test_una_gasolinera_sin_coordenadas_no_va_al_mapa(): void
+    {
+        $conCoordenadas = $this->estacion('Con coordenadas', self::CENTRO_LAT + 0.01, self::CENTRO_LON);
+        $this->precio($conCoordenadas, 1500);
+
+        $sinCoordenadas = FuelStation::create([
+            'ideess' => 5900,
+            'label' => 'Sin coordenadas',
+            'municipality' => 'Málaga',
+            'province' => 'MÁLAGA',
+            'province_id' => '29',
+        ]);
+        $this->precio($sinCoordenadas, 1400);
+
+        $mapa = $this->history()->stationsForMap(FuelKind::Diesel, $this->zona());
+
+        // No se puede pintar en un mapa lo que no tiene sitio
+        $this->assertCount(1, $mapa);
+        $this->assertSame('Con coordenadas', $mapa->first()->label);
+    }
+
+    public function test_el_mapa_solo_aparece_con_zona_elegida(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (range(0, 3) as $i) {
+            $this->precio($this->estacion('Gasolinera '.$i, self::CENTRO_LAT + $i * 0.005, self::CENTRO_LON), 1500 + $i);
+        }
+
+        // Sin zona no se manda nada: serían las 2.120 estaciones de Andalucía
+        $this->actingAs($user)
+            ->get(route('prices'))
+            ->assertOk()
+            ->assertDontSee('El mapa de tu zona');
+
+        $this->actingAs($user)->post(route('prices.area'), [
+            'lat' => self::CENTRO_LAT,
+            'lon' => self::CENTRO_LON,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('prices'))
+            ->assertOk()
+            ->assertSee('El mapa de tu zona')
+            ->assertSee('fuelMap({ stations:', false);
+    }
+
     public function test_sin_zona_el_ranking_no_habla_de_distancias(): void
     {
         $this->precio($this->estacion('Cualquiera', self::CENTRO_LAT, self::CENTRO_LON), 1600);
