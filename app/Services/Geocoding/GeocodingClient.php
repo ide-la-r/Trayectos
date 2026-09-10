@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Geocoding;
 
+use App\Support\Geo;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -36,8 +37,21 @@ final class GeocodingClient
      */
     private const BBOX = '-19.0,27.4,4.6,44.0';
 
-    /** @return array<int, PlaceResult> */
-    public function search(string $query, int $limit = 6): array
+    /**
+     * Cuánto se agrupa la distancia al ordenar, en kilómetros.
+     *
+     * Sin agrupar, doscientos metros de diferencia reordenarían resultados que
+     * Photon ya traía bien puestos. Agrupando, todo lo que está «igual de
+     * cerca» conserva el orden que traía.
+     */
+    private const DISTANCE_BUCKET_KM = 25;
+
+    /**
+     * Busca sitios, poniendo delante los que caen cerca de quien pregunta.
+     *
+     * @return array<int, PlaceResult>
+     */
+    public function search(string $query, int $limit = 6, ?float $nearLat = null, ?float $nearLon = null): array
     {
         $query = trim($query);
 
@@ -45,9 +59,21 @@ final class GeocodingClient
             return [];
         }
 
-        // La v2 invalida lo que se cacheó con el orden antiguo, que ponía
-        // comercios por delante de ciudades.
-        $cacheKey = 'geocode:v2:'.md5(mb_strtolower($query)).":{$limit}";
+        $near = $nearLat !== null && $nearLon !== null;
+
+        /*
+         * La v3 invalida lo cacheado con el orden anterior, que no miraba la
+         * distancia.
+         *
+         * El punto entra en la clave porque el orden depende de él: si no,
+         * quien busca desde Málaga se comería el orden de quien buscó desde
+         * Madrid. Va redondeado a un decimal —unos once kilómetros— por dos
+         * motivos: así la caché sirve para todo un barrio en vez de para una
+         * sola persona, y así no queda la ubicación exacta de nadie escrita en
+         * las claves.
+         */
+        $from = $near ? round($nearLat, 1).','.round($nearLon, 1) : 'es';
+        $cacheKey = "geocode:v3:{$from}:".md5(mb_strtolower($query)).":{$limit}";
 
         if ($cached = Cache::get($cacheKey)) {
             return $this->hydrate($cached);
@@ -65,8 +91,10 @@ final class GeocodingClient
                 // 'default' los topónimos llegan ya en el idioma local, que
                 // para España es exactamente lo que se quiere.
                 'lang' => 'default',
-                'lat' => self::BIAS_LAT,
-                'lon' => self::BIAS_LON,
+                // Se le pasa igualmente, aunque su sesgo sea flojo: no estorba
+                // y algo ayuda. El orden de verdad lo pone rank() más abajo.
+                'lat' => $near ? $nearLat : self::BIAS_LAT,
+                'lon' => $near ? $nearLon : self::BIAS_LON,
                 'bbox' => self::BBOX,
             ]);
 
@@ -80,7 +108,11 @@ final class GeocodingClient
             ->values()
             // Se reordena antes de convertir, porque el criterio necesita los
             // campos crudos de Photon que PlaceResult ya no lleva.
-            ->sortBy(fn (array $feature, int $position) => [$this->rank($feature, $query), $position])
+            ->sortBy(fn (array $feature, int $position) => [
+                $this->rank($feature, $query),
+                $this->distanceBucket($feature, $nearLat, $nearLon),
+                $position,
+            ])
             ->map(fn (array $feature) => $this->toPlace($feature))
             ->filter()
             ->map(fn (PlaceResult $place) => $place->toArray())
@@ -122,6 +154,32 @@ final class GeocodingClient
         };
 
         return ($exact ? 0 : 10) + $size;
+    }
+
+    /**
+     * A qué distancia cae, en grupos de veinticinco kilómetros.
+     *
+     * Es el desempate: entre dos resultados que valen lo mismo —dos calles con
+     * el mismo nombre, por ejemplo— gana la de al lado. Buscando «Calle
+     * Larios» desde Málaga salía primero una de Toledo, porque para Photon las
+     * dos son igual de buenas y no sabe desde dónde se pregunta.
+     *
+     * No puede ir ANTES del criterio de rank(): si mandara la distancia,
+     * buscando «Madrid» desde Málaga saldría antes una calle Madrid de aquí al
+     * lado que la ciudad de Madrid.
+     */
+    private function distanceBucket(array $feature, ?float $nearLat, ?float $nearLon): int
+    {
+        $coordinates = data_get($feature, 'geometry.coordinates');
+
+        if ($nearLat === null || $nearLon === null || ! is_array($coordinates) || count($coordinates) < 2) {
+            return 0;   // Sin punto de referencia todos empatan y manda Photon
+        }
+
+        // Photon los da en [lon, lat]
+        $km = Geo::haversineKm($nearLat, $nearLon, (float) $coordinates[1], (float) $coordinates[0]);
+
+        return (int) floor($km / self::DISTANCE_BUCKET_KM);
     }
 
     private function normalize(string $value): string
