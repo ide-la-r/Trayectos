@@ -25,16 +25,6 @@
 
     body {
         @apply bg-neutral-50 text-neutral-900 antialiased;
-        /* Deja sitio a la barra de navegación inferior y al notch */
-        padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
-    }
-
-    /* En escritorio la navegación es una columna lateral: no hay barra inferior
-       que esquivar, y ese hueco dejaba una franja muerta al final de la página */
-    @media (min-width: 64rem) {
-        body {
-            padding-bottom: 0;
-        }
     }
 
     /* 16 px es el mínimo para que Safari en iOS no haga zoom al enfocar */
@@ -125,6 +115,17 @@
 @utility nav-bottom-bar {
     transform: translateZ(0);
     backface-visibility: hidden;
+}
+
+/*
+ * Sitio para la barra inferior al final del contenido.
+ *
+ * Va en el contenedor gris y NO en el body, que ahora es blanco: si el hueco
+ * lo dejara el body, al llegar al final de una página larga asomaría una tira
+ * blanca por encima de la barra. Así el gris llega hasta detrás de ella.
+ */
+@utility pb-nav {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
 }
 
 /* Hueco para la barra de estado del iPhone.

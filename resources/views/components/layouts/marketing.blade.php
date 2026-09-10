@@ -29,7 +29,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 {{-- Sin la reserva para la barra inferior: aquí no hay navegación de aplicación --}}
-<body class="min-h-full bg-neutral-50" style="padding-bottom: 0">
+<body class="min-h-dvh bg-neutral-50">
 
 <header class="vt-chrome sticky top-0 z-30 border-b border-neutral-200/80 bg-white/85 backdrop-blur-md">
     <nav class="mx-auto flex max-w-5xl items-center gap-4 px-5 py-3" aria-label="Principal">

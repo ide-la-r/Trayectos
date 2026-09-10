@@ -45,17 +45,29 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-{{-- min-h-dvh y no min-h-full: «full» es el 100 % de la altura del padre, y
-     como <html> no tiene altura fija no resolvía a nada, así que en una
-     pantalla con poco contenido —Grupo, Coches— la página se quedaba más corta
-     que el móvil y por debajo de la barra inferior asomaba una franja. «dvh»
-     es la altura real de la ventana, contando las barras del navegador. --}}
-<body class="min-h-dvh lg:pb-0">
+{{--
+    Dos cosas en esta línea, y las dos por la misma franja de abajo:
+
+    min-h-dvh y no min-h-full. «full» es el 100 % de la altura del padre, y
+    como <html> no tiene altura fija no resolvía a nada: la página se quedaba
+    más corta que la pantalla.
+
+    bg-white y no el gris de siempre. La franja que queda por debajo de la
+    barra inferior en un iPhone instalado —la del indicador de inicio— la
+    pinta el sistema POR FUERA de la web, y usa el color de fondo del body.
+    Con el body gris quedaba una banda gris pegada a una barra blanca. Ahora
+    el body es blanco y el gris lo pone el contenedor de dentro, así que el
+    sistema rellena en blanco y la barra se funde con el borde.
+--}}
+<body class="min-h-dvh bg-white lg:pb-0">
     {{-- La navegación se pinta como columna lateral en escritorio y como barra
          inferior en móvil; el desplazamiento del contenido lo compensa lg:pl-60 --}}
     <x-app-nav :group="$group ?? null" />
 
-    <div class="lg:pl-60">
+    {{-- El gris de la aplicación vive aquí y no en el body: mira el comentario
+         de arriba. min-h-dvh para que llegue hasta abajo aunque la pantalla
+         tenga poco contenido. --}}
+    <div class="pb-nav min-h-dvh bg-neutral-50 lg:pl-60 lg:pb-0">
         {{-- El margen de arriba NO es decorativo: la aplicación declara
              «black-translucent», así que en un iPhone instalado el contenido se
              pinta POR DEBAJO del reloj y la cabecera se comía la hora. El fondo
