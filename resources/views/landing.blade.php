@@ -26,6 +26,11 @@
             dónde y quién iba; el resto lo pone la aplicación.
         </p>
 
+        <p class="mt-4 max-w-xl leading-relaxed text-neutral-400">
+            Además te dice dónde repostar más barato, avisa al móvil de quien iba contigo, y
+            se instala en la pantalla de inicio como una aplicación más.
+        </p>
+
         <div class="mt-9 flex flex-wrap items-center gap-3">
             <a href="{{ route('register') }}"
                class="btn inline-flex bg-white px-5 py-3 text-neutral-900 hover:bg-neutral-200">
@@ -100,8 +105,8 @@
                 <p class="font-mono text-sm text-neutral-400">01</p>
                 <h3 class="mt-2 font-semibold text-neutral-900">Apuntas el viaje</h3>
                 <p class="mt-2 text-sm leading-relaxed text-neutral-600">
-                    Origen, destino y quién iba. El buscador de direcciones autocompleta
-                    mientras escribes.
+                    Origen, destino y quién iba. El buscador pone primero lo que te pilla
+                    cerca, y los viajes que repetís salen ya escritos: elegir y confirmar.
                 </p>
             </li>
             <li>
@@ -116,8 +121,8 @@
                 <p class="font-mono text-sm text-neutral-400">03</p>
                 <h3 class="mt-2 font-semibold text-neutral-900">Queda apuntado en el libro</h3>
                 <p class="mt-2 text-sm leading-relaxed text-neutral-600">
-                    Quien conduce pone el dinero y recupera la parte de los demás. Si las
-                    cuentas no cuadran a cero, no se apunta.
+                    Quien conduce pone el dinero y recupera la parte de los demás, y a cada
+                    uno le llega un aviso al móvil con lo que le toca.
                 </p>
             </li>
             <li>
@@ -129,6 +134,68 @@
                 </p>
             </li>
         </ol>
+    </div>
+</section>
+
+{{-- ─── Lo demás ─────────────────────────────────────────────────────────── --}}
+<section class="mx-auto max-w-5xl px-5 py-20">
+    <h2 class="max-w-2xl text-2xl font-semibold tracking-tight text-balance text-neutral-900 sm:text-3xl">
+        Y lo que pasa entre viaje y viaje
+    </h2>
+    <p class="mt-3 max-w-2xl text-neutral-600">
+        Repartir el gasto es la mitad. La otra mitad es todo lo que hay alrededor.
+    </p>
+
+    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
+            <h3 class="font-semibold text-neutral-900">Dónde repostar más barato</h3>
+            <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                Un mapa con las gasolineras de tu zona, cada una con su logo y su precio, y el
+                histórico de cómo se viene moviendo. Precios oficiales del Ministerio, cuatro
+                veces al día.
+            </p>
+        </div>
+
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
+            <h3 class="font-semibold text-neutral-900">A quién le toca conducir</h3>
+            <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                La aplicación lo propone mirando quién debe más, quién tiene coche con plazas
+                suficientes y a quién le tocó las últimas veces. Se acabó el «hoy llevo yo otra
+                vez».
+            </p>
+        </div>
+
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
+            <h3 class="font-semibold text-neutral-900">Quien va medio viaje paga medio</h3>
+            <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                Si a alguien lo recogéis por el camino, el trozo que hicisteis sin él no es
+                suyo. El coste se corta por tramos y cada uno paga los que iba dentro.
+            </p>
+        </div>
+
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
+            <h3 class="font-semibold text-neutral-900">Lo que gasta tu coche de verdad</h3>
+            <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                Apunta el cuentakilómetros al llenar y de un lleno al siguiente sale tu consumo
+                real. Sin fiarse de la ficha del fabricante: son tus litros y tus kilómetros.
+            </p>
+        </div>
+
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
+            <h3 class="font-semibold text-neutral-900">Avisos, pero sólo de dinero</h3>
+            <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                Cuando alguien apunta un viaje en el que ibas, lo anula, o te paga lo que te
+                debía — con el importe en el propio aviso. De nada más.
+            </p>
+        </div>
+
+        <div class="card-tight p-5 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md">
+            <h3 class="font-semibold text-neutral-900">Se instala y funciona sin cobertura</h3>
+            <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                Se añade a la pantalla de inicio como cualquier aplicación, sin pasar por
+                ninguna tienda. Y si te quedas sin datos en mitad de la sierra, sigue abriendo.
+            </p>
+        </div>
     </div>
 </section>
 
@@ -185,9 +252,10 @@
             </div>
 
             <p class="mt-6 max-w-xl text-sm leading-relaxed text-neutral-600">
-                Y va afinando solo: cada vez que echáis combustible compara lo que gastasteis
-                de verdad con lo que había calculado, y corrige para ese coche. Cuanto más
-                lo usáis, más se acerca.
+                Y va afinando solo. Si apuntas el cuentakilómetros al llenar, de un llenado al
+                siguiente sale <strong class="text-neutral-900">lo que gasta tu coche de
+                verdad</strong> —sin fiarse de la ficha del fabricante ni de ningún modelo— y
+                el cálculo se corrige con ese número. Cuanto más lo usáis, más se acerca.
             </p>
         </div>
 
