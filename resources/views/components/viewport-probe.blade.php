@@ -8,8 +8,9 @@
     QUITAR cuando esté resuelto.
 --}}
 <div id="medidor"
-     style="position: fixed; inset: auto 0 0 0; z-index: 90; background: #EE7203; color: #fff;
-            font: 600 11px/1.35 ui-monospace, monospace; padding: 6px 8px; white-space: pre;">
+     style="position: fixed; inset: auto 0 auto 0; top: 50%; z-index: 90; background: #EE7203;
+            color: #fff; font: 600 11px/1.35 ui-monospace, monospace; padding: 6px 8px;
+            white-space: pre;">
     midiendo…
 </div>
 
@@ -27,11 +28,18 @@
             // propiedad personalizada para poder consultarlos
             const inset = (lado) => raiz.getPropertyValue('--probe-' + lado).trim() || '?';
 
+            const caja2 = document.querySelector('body > div');
+            const w = caja2 ? caja2.getBoundingClientRect() : null;
+            const instalada = window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true;
+
             caja.textContent = [
+                `INSTALADA ${instalada ? 'SI' : 'no'}   screen ${window.screen.height}`,
                 `ventana ${window.innerHeight}  visual ${Math.round(window.visualViewport?.height ?? 0)}`,
                 `pagina  ${document.documentElement.scrollHeight}  scroll ${Math.round(window.scrollY)}`,
+                `gris    top ${w ? Math.round(w.top) : '?'}  bottom ${w ? Math.round(w.bottom) : '?'}`,
                 `barra   top ${r ? Math.round(r.top) : '?'}  bottom ${r ? Math.round(r.bottom) : '?'}`,
-                `HUECO   ${r ? Math.round(window.innerHeight - r.bottom) : '?'}  ·  screen ${window.screen.height}`,
+                `HUECO   ${r ? Math.round(window.innerHeight - r.bottom) : '?'}`,
                 `insets  arriba ${inset('top')}  abajo ${inset('bottom')}`,
             ].join('\n');
         };

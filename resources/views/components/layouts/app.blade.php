@@ -114,9 +114,14 @@
         </main>
     </div>
 
-    {{-- Medidor temporal, sólo con ?medir=1. Quitar cuando esté resuelto. --}}
-    @if (request()->boolean('medir'))
-        <x-viewport-probe />
-    @endif
+    {{--
+        MEDIDOR TEMPORAL — QUITAR EN CUANTO ESTÉ LA CAPTURA.
+
+        Va sin condición a propósito: dentro de la aplicación instalada no se
+        puede escribir una dirección, así que con ?medir=1 no había forma de
+        encenderlo justo donde falla. Se enseña a todo el mundo durante un
+        despliegue y se quita.
+    --}}
+    <x-viewport-probe />
 </body>
 </html>
