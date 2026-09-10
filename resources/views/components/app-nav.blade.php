@@ -1,10 +1,15 @@
-@props(['group' => null])
+@props(['group' => null, 'part' => 'side'])
 
 {{--
     Una sola definición de la navegación, dos presentaciones: barra inferior con
     el pulgar en móvil y columna lateral en escritorio. Antes solo existía la
     barra inferior, así que en un monitor la aplicación se veía como un móvil
     estirado con la navegación pegada al borde de abajo.
+
+    Se pinta en dos llamadas —«side» y «bottom»— y no en una porque en móvil la
+    barra inferior ya no va suelta encima de la página: es el último hijo de una
+    columna que ocupa la ventana, y para eso tiene que ir al final del HTML. La
+    lista de secciones se calcula igual en las dos.
 --}}
 @php
     $icons = [
@@ -33,6 +38,7 @@
     $items[] = ['label' => 'Precios', 'url' => route('prices'), 'active' => request()->routeIs('prices'), 'icon' => 'chart'];
 @endphp
 
+@if ($part === 'side')
 {{-- ── Columna lateral (escritorio) ───────────────────────────────────────── --}}
 {{-- safe-top por el iPad instalado, donde esta columna también arranca por
      debajo de la barra de estado --}}
@@ -70,11 +76,26 @@
     </form>
 </aside>
 
+@else
 {{-- ── Barra inferior (móvil) ─────────────────────────────────────────────── --}}
-{{-- Fondo opaco y sin desenfoque a propósito: un backdrop-filter sobre un
-     elemento fijo es el otro disparador del fallo de repintado de iOS, y aquí
-     no aporta nada porque debajo no hay nada que valga la pena entrever. --}}
-<nav class="nav-bottom-bar fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white lg:hidden"
+{{--
+    Ya NO va «fixed», y ése es el arreglo de un fallo que costó una tarde.
+
+    Pegada al fondo de la ventana con position:fixed, en un iPhone instalado
+    aparecía unos centímetros por encima del borde y bajaba sola al arrastrar
+    el dedo. El motivo: iOS arranca dando una ventana 59 puntos más corta que
+    la pantalla —el sitio de la barra de Safari, aunque ahí no haya barra— y la
+    agranda con el primer gesto. La barra, pegada al fondo de esa ventana, la
+    seguía. Medido: ventana 873 sobre una pantalla de 932.
+
+    Ahora es el último hijo de una columna que mide exactamente la ventana y no
+    se desplaza; lo que rueda es el contenido de dentro. Si el documento no se
+    desplaza, iOS no cambia el tamaño de la ventana y la barra no se mueve.
+
+    Fondo opaco y sin desenfoque a propósito: un backdrop-filter aquí no aporta
+    nada porque debajo no hay nada que valga la pena entrever.
+--}}
+<nav class="nav-bottom-bar shrink-0 border-t border-neutral-200 bg-white lg:hidden"
      style="padding-bottom: env(safe-area-inset-bottom)"
      aria-label="Secciones">
     <div class="mx-auto flex max-w-2xl items-stretch px-2">
@@ -88,3 +109,4 @@
         @endforeach
     </div>
 </nav>
+@endif

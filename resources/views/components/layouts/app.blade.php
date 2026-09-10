@@ -62,20 +62,34 @@
     el body es blanco y el gris lo pone el contenedor de dentro, así que el
     sistema rellena en blanco y la barra se funde con el borde.
 --}}
-<body class="min-h-dvh bg-white lg:pb-0">
-    {{-- La navegación se pinta como columna lateral en escritorio y como barra
-         inferior en móvil; el desplazamiento del contenido lo compensa lg:pl-60 --}}
-    <x-app-nav :group="$group ?? null" />
+{{--
+    EL ARMAZÓN. En móvil la aplicación ocupa la ventana y NO se desplaza; lo
+    que rueda es el contenido de dentro (el <main>).
+
+    No es un capricho: en un iPhone instalado, iOS arranca dando una ventana 59
+    puntos más corta que la pantalla —reserva el sitio de la barra de Safari
+    aunque ahí no haya ninguna— y la agranda con el primer gesto de arrastrar.
+    Con la barra inferior pegada al fondo de esa ventana, aparecía por encima
+    del borde y bajaba sola al tocar. Medido en el móvil: ventana 873 sobre una
+    pantalla de 932.
+
+    Si el documento no se desplaza, iOS no cambia el tamaño de la ventana, y la
+    barra —que ahora es el último hijo de esta columna— no se mueve nunca.
+
+    En escritorio se deshace entero: la página vuelve a desplazarse como
+    siempre y la navegación es la columna lateral.
+--}}
+<body class="h-dvh overflow-hidden bg-white lg:h-auto lg:min-h-dvh lg:overflow-visible">
+    <x-app-nav :group="$group ?? null" part="side" />
 
     {{-- El gris de la aplicación vive aquí y no en el body: mira el comentario
-         de arriba. min-h-dvh para que llegue hasta abajo aunque la pantalla
-         tenga poco contenido. --}}
-    <div class="pb-nav min-h-dvh bg-neutral-50 lg:pl-60 lg:pb-0">
+         de arriba. --}}
+    <div class="flex h-full flex-col bg-neutral-50 lg:h-auto lg:min-h-dvh lg:block lg:pl-60">
         {{-- El margen de arriba NO es decorativo: la aplicación declara
              «black-translucent», así que en un iPhone instalado el contenido se
              pinta POR DEBAJO del reloj y la cabecera se comía la hora. El fondo
              de la barra sí sube hasta el borde; lo que baja es su contenido. --}}
-        <header class="vt-chrome safe-top sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
+        <header class="vt-chrome safe-top z-20 shrink-0 border-b border-neutral-200 bg-white/90 backdrop-blur lg:sticky lg:top-0">
             <div class="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 lg:max-w-4xl lg:px-8 lg:py-4">
                 {{-- En escritorio la marca ya está en la columna lateral --}}
                 <a href="{{ route('dashboard') }}" class="shrink-0 text-neutral-900 lg:hidden" aria-label="Ir al panel">
@@ -109,16 +123,17 @@
             </div>
         </header>
 
-        <main class="mx-auto max-w-2xl px-4 py-4 lg:max-w-4xl lg:px-8 lg:py-8">
+        {{-- Aquí es donde rueda el contenido en móvil. El desplazamiento suave
+             de iOS se pide a mano: dentro de un contenedor no viene solo. --}}
+        <main class="mx-auto w-full max-w-2xl flex-1 overflow-y-auto px-4 py-4 lg:max-w-4xl lg:flex-none lg:overflow-visible lg:px-8 lg:py-8"
+              style="-webkit-overflow-scrolling: touch">
             <x-flash />
             <x-install-banner />
 
             {{ $slot }}
         </main>
-    </div>
 
-    {{-- MEDIDOR TEMPORAL — QUITAR con la captura. Sin condición porque dentro
-         de la aplicación instalada no se puede escribir una dirección. --}}
-    <x-viewport-probe />
+        <x-app-nav :group="$group ?? null" part="bottom" />
+    </div>
 </body>
 </html>
