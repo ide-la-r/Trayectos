@@ -11,7 +11,27 @@
     <link rel="manifest" href="{{ url('/manifest.webmanifest') }}">
     <meta name="theme-color" content="#171717">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    {{--
+        «default» y NO «black-translucent», que es lo que había.
+
+        Con black-translucent iOS pinta la web a pantalla completa, por debajo
+        del reloj y del indicador de inicio, y queda en manos de la página
+        dejar hueco a los dos. Se hizo con env(safe-area-inset-*) y aun así
+        quedaba una franja abajo en las pantallas con poco contenido, que no
+        hubo forma de cerrar: tres intentos, ninguno funcionó.
+
+        Con «default» el sistema reserva él esas dos franjas y la web ocupa lo
+        que queda en medio. Se pierde el efecto de pantalla completa —la barra
+        de estado deja de fundirse con el fondo— y a cambio no hay huecos en
+        ningún iPhone y no depende de acertar con los márgenes.
+
+        OJO: iOS lee esto UNA vez, cuando se añade la aplicación a la pantalla
+        de inicio, y no lo vuelve a mirar. Cambiarlo aquí no arregla las
+        instalaciones que ya existen: hay que borrarla y volver a añadirla.
+        Eso es justo lo que destapó el problema — una instalación vieja, de
+        antes de que existiera la etiqueta, nunca la había aplicado.
+    --}}
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Trayectos">
     {{-- Safari ignora los iconos del manifest para la pantalla de inicio --}}
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url('/icons/apple-touch-icon.png') }}">
@@ -25,7 +45,12 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-full lg:pb-0">
+{{-- min-h-dvh y no min-h-full: «full» es el 100 % de la altura del padre, y
+     como <html> no tiene altura fija no resolvía a nada, así que en una
+     pantalla con poco contenido —Grupo, Coches— la página se quedaba más corta
+     que el móvil y por debajo de la barra inferior asomaba una franja. «dvh»
+     es la altura real de la ventana, contando las barras del navegador. --}}
+<body class="min-h-dvh lg:pb-0">
     {{-- La navegación se pinta como columna lateral en escritorio y como barra
          inferior en móvil; el desplazamiento del contenido lo compensa lg:pl-60 --}}
     <x-app-nav :group="$group ?? null" />

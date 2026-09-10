@@ -12,7 +12,10 @@
     <link rel="manifest" href="{{ url('/manifest.webmanifest') }}">
     <meta name="theme-color" content="#171717">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    {{-- La misma que el resto de la aplicación: si la portada declarase otra
+         cosa, quien la añada desde aquí se instalaría una versión distinta.
+         El porqué está explicado en layouts/app.blade.php. --}}
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Trayectos">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url('/icons/apple-touch-icon.png') }}">
     <link rel="icon" href="{{ url('/icons/icon-192.png') }}" sizes="192x192">
