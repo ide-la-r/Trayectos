@@ -63,11 +63,13 @@
 
     @if (! $tieneGrupo || ! $tieneCoche)
         <section class="{{ $tieneGrupo ? 'mt-8' : '' }}">
-            {{-- Cabecera del arranque, con el asfalto de la marca de fondo --}}
+            {{-- Cabecera del arranque, con las curvas de la marca de fondo --}}
             <div class="relative isolate overflow-hidden rounded-2xl bg-neutral-950 px-6 py-8 text-neutral-50 sm:px-8">
                 <svg class="pointer-events-none absolute -right-10 -bottom-24 -z-10 w-72 max-w-none opacity-[0.09]"
-                     viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">
-                    <path d="M6 45 L42 45 L28.6 14.6 L19.4 14.6 Z"/>
+                     viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4"
+                     stroke-linecap="round" aria-hidden="true">
+                    <path d="M14 34.4 Q 24 18.4 34 34.4" opacity="0.55"/>
+                    <path d="M9 29.4 Q 24 8.4 39 29.4"/>
                 </svg>
 
                 <p class="font-mono text-xs tracking-[0.14em] text-neutral-400 uppercase">

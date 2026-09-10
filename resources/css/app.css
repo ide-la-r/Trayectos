@@ -21,6 +21,20 @@
     html {
         /* Evita el zoom automático de iOS al enfocar un campo */
         -webkit-text-size-adjust: 100%;
+
+        /*
+         * Blanco y no gris como el resto de la página, y no es un descuido.
+         *
+         * En un iPhone instalado, la franja del indicador de inicio —lo de
+         * abajo del todo, por debajo de la barra de navegación— la pinta el
+         * sistema con el fondo del documento, no con el del body. Con el gris
+         * quedaba una banda a distinto color justo debajo de la barra, que es
+         * blanca, y parecía que la barra flotaba.
+         *
+         * El body sigue siendo gris y lo tapa entero, así que este blanco sólo
+         * se ve ahí abajo, que es exactamente donde hace falta.
+         */
+        background-color: #fff;
     }
 
     body {

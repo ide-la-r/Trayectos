@@ -1,6 +1,9 @@
 @props([
     'wordmark' => false,
     'size' => 'size-10',
+    // La placa de detrás. Se puede cambiar porque sobre un fondo ya oscuro
+    // —la franja del login— un cuadrado negro no se ve.
+    'plate' => 'bg-neutral-900 text-neutral-50',
 ])
 
 {{--
@@ -18,7 +21,7 @@
     trazo hereda el color del texto. La cima es el único color fijo.
 --}}
 <span {{ $attributes->merge(['class' => 'inline-flex items-center gap-2.5']) }}>
-    <span class="{{ $size }} grid shrink-0 place-items-center overflow-hidden rounded-[28%] bg-neutral-900 text-neutral-50">
+    <span class="{{ $size }} {{ $plate }} grid shrink-0 place-items-center overflow-hidden rounded-[28%]">
         <svg viewBox="0 0 48 48" class="size-full" fill="none" stroke="currentColor"
              stroke-width="3.4" stroke-linecap="round" aria-hidden="true">
             {{-- La de abajo, más tenue --}}

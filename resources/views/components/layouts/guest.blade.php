@@ -40,18 +40,11 @@
     {{-- safe-top: instalada en el iPhone, esta franja se pinta por debajo del
          reloj y el nombre se le montaba encima --}}
     <div class="safe-top mx-auto max-w-md px-5 pt-10 pb-16 text-center lg:mx-0 lg:max-w-none lg:px-0 lg:pt-0 lg:pb-0 lg:text-left">
+        {{-- Con el componente y NO con una copia del dibujo: aquí había una, y
+             al cambiar la marca se quedó con la vieja mientras el resto de la
+             aplicación ya llevaba la nueva. --}}
         <a href="{{ route('home') }}" class="inline-flex" aria-label="Volver a la portada">
-            <span class="grid size-14 place-items-center overflow-hidden rounded-[28%] bg-white/10 ring-1 ring-white/15">
-                <svg viewBox="0 0 48 48" class="size-full" fill="currentColor" aria-hidden="true">
-                    <circle cx="24" cy="9.2" r="5.4" opacity="0.5"/>
-                    <path d="M6 45 L42 45 L28.6 14.6 L19.4 14.6 Z" opacity="0.34"/>
-                    <path d="M22.4 45 L25.6 45 L25.25 38.4 L22.75 38.4 Z"/>
-                    <path d="M22.85 35.4 L25.15 35.4 L24.92 29.9 L23.08 29.9 Z"/>
-                    <path d="M23.15 27.4 L24.85 27.4 L24.7 23.1 L23.3 23.1 Z"/>
-                    <path d="M23.38 20.9 L24.62 20.9 L24.52 17.7 L23.48 17.7 Z"/>
-                    <path d="M23.55 16.1 L24.45 16.1 L24.4 14.6 L23.6 14.6 Z"/>
-                </svg>
-            </span>
+            <x-logo size="size-14" plate="bg-white/10 ring-1 ring-white/15 text-neutral-50" />
         </a>
 
         <h1 class="mt-5 text-2xl font-semibold tracking-tight lg:mt-10 lg:max-w-md lg:text-4xl lg:leading-[1.1] lg:text-balance">
