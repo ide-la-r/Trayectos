@@ -2,12 +2,14 @@
 
 {{-- ─── Portada ──────────────────────────────────────────────────────────── --}}
 <section class="relative isolate overflow-hidden bg-neutral-950 text-neutral-50">
-    {{-- La carretera de la marca, a tamaño grande y muy tenue: el mismo dibujo
-         del icono sirve de fondo sin necesidad de ninguna imagen. --}}
-    <svg class="pointer-events-none absolute -bottom-24 left-1/2 -z-10 w-[46rem] max-w-none -translate-x-1/2 road-ambient"
-         viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">
-        <path d="M6 45 L42 45 L28.6 14.6 L19.4 14.6 Z"/>
-        <circle cx="24" cy="9.2" r="5.4"/>
+    {{-- Las curvas de nivel de la marca, a tamaño grande y muy tenues: el
+         mismo dibujo del icono sirve de fondo sin necesidad de ninguna imagen. --}}
+    <svg class="pointer-events-none absolute -bottom-32 left-1/2 -z-10 w-[52rem] max-w-none -translate-x-1/2 road-ambient"
+         viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2"
+         stroke-linecap="round" aria-hidden="true">
+        <path d="M14 34.4 Q 24 18.4 34 34.4" opacity="0.55"/>
+        <path d="M9 29.4 Q 24 8.4 39 29.4"/>
+        <path d="M4 24.4 Q 24 -1.6 44 24.4" opacity="0.3"/>
     </svg>
 
     <div class="mx-auto max-w-5xl px-5 py-20 sm:py-28">
