@@ -26,7 +26,9 @@ RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --opti
 # gratuitos, cada proceso que no arrancas es memoria que te queda.
 FROM dunglas/frankenphp:1-php8.4-alpine
 
-RUN install-php-extensions pdo_pgsql pdo_sqlite gd intl zip opcache pcntl
+# bcmath: los avisos firman con curva elíptica y sin él la librería lo hace
+# en PHP puro, mucho más lento
+RUN install-php-extensions pdo_pgsql pdo_sqlite gd intl zip opcache pcntl bcmath
 
 # El binario de FrankenPHP trae CAP_NET_BIND_SERVICE marcada en el propio
 # fichero para poder escuchar en el 80 sin ser root. Render —como cualquier

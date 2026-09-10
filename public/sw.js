@@ -82,3 +82,56 @@ self.addEventListener('fetch', (event) => {
         );
     }
 });
+
+/* ─── Avisos ─────────────────────────────────────────────────────────────────
+   Esto corre con la aplicación cerrada: el navegador despierta al service
+   worker sólo para esto. Nada de aquí puede fallar sin enseñar un aviso,
+   porque iOS y Android penalizan al que recibe un push y no muestra nada — te
+   pueden dejar de mandar los siguientes.
+   ────────────────────────────────────────────────────────────────────────── */
+
+self.addEventListener('push', (event) => {
+    let payload = {};
+
+    try {
+        payload = event.data ? event.data.json() : {};
+    } catch {
+        // Un aviso ilegible sigue siendo un aviso: mejor genérico que ninguno
+    }
+
+    const title = payload.title || 'Libro de Trayectos';
+
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body: payload.body || '',
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-192.png',
+            tag: payload.tag || undefined,
+            // Con la misma etiqueta el nuevo sustituye al viejo, pero en
+            // silencio: sustituir no debe volver a vibrar el móvil.
+            renotify: false,
+            data: { url: payload.url || '/panel' },
+        }),
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    const target = new URL(event.notification.data?.url || '/panel', self.location.origin);
+
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+            // Si la aplicación ya está abierta se reutiliza esa ventana en vez
+            // de abrir otra encima
+            for (const client of clients) {
+                if (new URL(client.url).origin === target.origin && 'focus' in client) {
+                    client.navigate(target.href);
+                    return client.focus();
+                }
+            }
+
+            return self.clients.openWindow(target.href);
+        }),
+    );
+});

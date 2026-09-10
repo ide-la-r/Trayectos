@@ -182,4 +182,37 @@ return [
     */
 
     'internal_task_token' => env('INTERNAL_TASK_TOKEN'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Avisos en el móvil (Web Push)
+    |--------------------------------------------------------------------------
+    |
+    | Sin claves configuradas la función se apaga sola: no se ofrece el
+    | interruptor y no se manda nada. Se generan UNA vez con
+    | `php artisan trayectos:vapid` y no se tocan: cambiarlas invalida todas
+    | las suscripciones que haya dado la gente y hay que volver a pedirlas una
+    | por una.
+    |
+    | Apple y Google no cobran por esto. El «subject» es a quién avisar desde
+    | su lado si algo va mal; tiene que ser un mailto: o una URL.
+    |
+    */
+
+    'push' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', 'https://libro-de-trayectos.onrender.com'),
+        /*
+         * El envío va dentro de la petición de quien apunta el viaje, porque
+         * en el plan gratuito de Render no hay trabajador de colas. Con un
+         * grupo de cuatro son cuatro peticiones en paralelo; el tope está para
+         * que un servidor de avisos atascado no deje colgado a quien está
+         * apuntando.
+         */
+        'timeout' => 8,
+        // Cuánto lo guarda Apple o Google si el móvil está apagado. Un día:
+        // pasado eso, el viaje ya se ha visto al abrir la aplicación.
+        'ttl' => 86400,
+    ],
 ];

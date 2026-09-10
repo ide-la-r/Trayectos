@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Services\Ledger\BalanceService;
 use App\Services\Ledger\LedgerService;
+use App\Services\Push\Announcer;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,8 +31,12 @@ class SettlementController extends Controller
         ]);
     }
 
-    public function store(Request $request, Group $group, LedgerService $ledger): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        Group $group,
+        LedgerService $ledger,
+        Announcer $announcer,
+    ): RedirectResponse {
         $groupId = $group->id;
 
         $request->merge(['amount' => Money::normalizeInput($request->input('amount'))]);
@@ -49,14 +54,21 @@ class SettlementController extends Controller
             'settled_on' => 'fecha',
         ]);
 
+        $from = $group->members()->findOrFail($data['from_member_id']);
+        $to = $group->members()->findOrFail($data['to_member_id']);
+        $amountCents = Money::fromEuros($data['amount']);
+
         $ledger->postSettlement(
-            from: $group->members()->findOrFail($data['from_member_id']),
-            to: $group->members()->findOrFail($data['to_member_id']),
-            amountCents: Money::fromEuros($data['amount']),
+            from: $from,
+            to: $to,
+            amountCents: $amountCents,
             settledOn: Carbon::parse($data['settled_on']),
             method: $data['method'] ?? null,
             createdBy: $request->user()->id,
         );
+
+        // A quien cobra le interesa enterarse sin tener que entrar a mirar
+        $announcer->settlementRecorded($from, $to, $amountCents, $request->user()->id);
 
         return back()->with('status', 'Pago registrado.');
     }

@@ -103,6 +103,32 @@ curl -X POST -H "Authorization: Bearer $INTERNAL_TASK_TOKEN" \
 Después, desde el móvil: regístrate, crea el grupo, pasa el código de invitación al resto y añade tu
 coche. En iOS, *Compartir → Añadir a pantalla de inicio* (la propia aplicación lo recuerda).
 
+## 6. Avisos en el móvil (opcional)
+
+Hacen falta un par de claves VAPID. Se generan **una vez**:
+
+```bash
+php artisan trayectos:vapid
+```
+
+Las dos líneas que imprime van al `.env` local, y **otras propias** a Render → *Environment*, junto
+con `VAPID_SUBJECT` (un `mailto:` tuyo o la URL de la aplicación). La privada es un secreto: no la
+pegues en un chat ni la subas al repositorio.
+
+No las cambies después. Cambiarlas invalida todas las suscripciones, y cada persona tendría que
+volver a activar los avisos desde el panel.
+
+Sin claves configuradas la función no existe: el interruptor no aparece y no se manda nada. Es
+gratis — ni Apple ni Google cobran por esto.
+
+**En iPhone los avisos sólo funcionan con la aplicación instalada en la pantalla de inicio.** Desde
+Safari, sin instalar, el navegador ni siquiera define la interfaz; la aplicación lo detecta y lo
+explica en vez de enseñar un interruptor que no haría nada.
+
+Los avisos salen dentro de la petición de quien apunta el viaje, no por una cola: en el plan
+gratuito de Render no hay trabajador, y un aviso que espera al cron llegaría seis horas tarde. Son
+unas pocas peticiones en paralelo, y si fallan se anotan en el registro sin tocar el viaje.
+
 ## Coste total
 
 | Concepto | Precio |

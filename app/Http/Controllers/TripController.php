@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\Trip;
 use App\Models\Vehicle;
 use App\Services\Ledger\LedgerService;
+use App\Services\Push\Announcer;
 use App\Services\Trips\FrequentTrips;
 use App\Services\Trips\RouteProfiler;
 use App\Services\Trips\TripDraft;
@@ -125,8 +126,12 @@ class TripController extends Controller
         ], fn ($value) => $value !== null);
     }
 
-    public function store(StoreTripRequest $request, Group $group, TripRecorder $recorder): RedirectResponse
-    {
+    public function store(
+        StoreTripRequest $request,
+        Group $group,
+        TripRecorder $recorder,
+        Announcer $announcer,
+    ): RedirectResponse {
         $data = $request->validated();
 
         $vehicle = $this->availableVehicles($group)->firstWhere('id', (int) $data['vehicle_id']);
@@ -167,6 +172,9 @@ class TripController extends Controller
             createdBy: $request->user()->id,
         ));
 
+        // Avisa a quien iba, menos a quien lo está apuntando
+        $announcer->tripRecorded($trip, $request->user()->id);
+
         return redirect()->route('trips.show', [$group, $trip])
             ->with('status', 'Viaje apuntado y repartido.');
     }
@@ -186,8 +194,13 @@ class TripController extends Controller
     }
 
     /** Anular no borra: contraasienta y deja el rastro en el libro. */
-    public function cancel(Request $request, Group $group, Trip $trip, LedgerService $ledger): RedirectResponse
-    {
+    public function cancel(
+        Request $request,
+        Group $group,
+        Trip $trip,
+        LedgerService $ledger,
+        Announcer $announcer,
+    ): RedirectResponse {
         abort_unless($trip->group_id === $group->id, 404);
 
         $member = $request->attributes->get('group_member');
@@ -211,6 +224,8 @@ class TripController extends Controller
             "viaje {$trip->origin_label} → {$trip->destination_label} del ".$trip->travelled_on->format('d/m/Y'),
             $request->user()->id,
         );
+
+        $announcer->tripCancelled($trip, $request->user()->id);
 
         return back()->with('status', 'Viaje anulado. El libro conserva el asiento original y su contrario.');
     }

@@ -134,4 +134,49 @@
         </section>
     @endif
 
+    {{-- ─── Avisos en el móvil ──────────────────────────────────────────────
+         Sólo si hay claves configuradas: sin ellas no hay nada que ofrecer. --}}
+    @if ($pushKey)
+        <section class="card mt-4" x-data="pushToggle(@js($pushKey))">
+            <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <h2 class="text-sm font-semibold text-neutral-900">Avisos en el móvil</h2>
+                    <p class="mt-1 text-xs leading-relaxed text-neutral-500">
+                        Cuando alguien apunte un viaje en el que vayas, lo anule, o te pague lo que te
+                        debe. Nada más: aquí no se avisa de nada que no mueva dinero.
+                    </p>
+                </div>
+
+                <button type="button" x-show="supported && ! blocked" x-cloak
+                        @click="toggle()" :disabled="busy"
+                        :class="enabled ? 'bg-neutral-900' : 'bg-neutral-200'"
+                        class="relative mt-0.5 h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50"
+                        :aria-pressed="enabled ? 'true' : 'false'" aria-label="Avisos en el móvil">
+                    <span :class="enabled ? 'translate-x-6' : 'translate-x-1'"
+                          class="absolute top-1 left-0 size-5 rounded-full bg-white shadow transition"></span>
+                </button>
+            </div>
+
+            <p x-show="enabled" x-cloak class="mt-3 text-xs text-neutral-500">
+                Activados en este móvil. Si usas la aplicación también en otro sitio, actívalos allí.
+            </p>
+
+            <p x-show="blocked" x-cloak class="mt-3 text-xs text-neutral-500">
+                Los tienes bloqueados para esta aplicación. Se vuelven a permitir desde los ajustes del
+                móvil, en las notificaciones de esta aplicación.
+            </p>
+
+            <p x-show="needsInstall" x-cloak class="mt-3 text-xs text-neutral-500">
+                En el iPhone los avisos sólo funcionan con la aplicación instalada en la pantalla de
+                inicio. Ábrela desde ahí y este interruptor aparecerá.
+            </p>
+
+            <p x-show="! supported && ! needsInstall" x-cloak class="mt-3 text-xs text-neutral-500">
+                Este navegador no sabe recibir avisos.
+            </p>
+
+            <p x-show="error" x-cloak class="mt-3 text-xs text-debt-700" x-text="error"></p>
+        </section>
+    @endif
+
 </x-layouts.app>

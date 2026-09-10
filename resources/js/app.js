@@ -7,6 +7,7 @@ import fuelArea from './fuel-area';
 import nativeMapLinks from './map-links';
 import tripMap from './trip-map';
 import fuelMap from './fuel-map';
+import pushToggle from './push';
 
 Alpine.data('placeField', placeField);
 Alpine.data('tripEstimate', tripEstimate);
@@ -15,6 +16,7 @@ Alpine.data('inviteLink', inviteLink);
 Alpine.data('fuelArea', fuelArea);
 Alpine.data('tripMap', tripMap);
 Alpine.data('fuelMap', fuelMap);
+Alpine.data('pushToggle', pushToggle);
 
 window.Alpine = Alpine;
 Alpine.start();

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\Ledger\BalanceService;
+use App\Services\Push\PushNotifier;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -29,6 +30,8 @@ class DashboardController extends Controller
             'groups' => $groups,
             'vehicles' => $request->user()->vehicles()->where('active', true)->get(),
             'onlyGroup' => $groups->count() === 1 ? $groups->first()->group : null,
+            // Sin claves configuradas los avisos no existen y no se ofrecen
+            'pushKey' => PushNotifier::configured() ? config('trayectos.push.public_key') : null,
         ]);
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\FuelPriceController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\InternalTaskController;
 use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\RefuelController;
 use App\Http\Controllers\SettlementController;
 use App\Http\Controllers\TripController;
@@ -44,6 +45,10 @@ Route::middleware('auth')->group(function () {
     // Precios de carburante de la zona: histórico y dónde está más barato
     Route::get('/precios', [FuelPriceController::class, 'index'])->name('prices');
     Route::post('/precios/zona', [FuelPriceController::class, 'updateArea'])->name('prices.area');
+
+    // Avisos en el móvil: el navegador se da de alta y de baja por detrás
+    Route::post('/avisos', [PushSubscriptionController::class, 'store'])->name('push.store');
+    Route::delete('/avisos', [PushSubscriptionController::class, 'destroy'])->name('push.destroy');
 
     // ─── Grupos ────────────────────────────────────────────────────────────
     Route::get('/grupos/crear', [GroupController::class, 'create'])->name('groups.create');

@@ -31,6 +31,8 @@ Instalable en el móvil como aplicación (PWA), también en iOS y sin pasar por 
 - **Los viajes de siempre**: los trayectos que el grupo repite salen solos en la pantalla de apuntar,
   deducidos del histórico. No hay plantillas que crear ni mantener, y repetir uno deja el formulario
   escrito —coche, gente y sitios— para confirmar la fecha y poco más.
+- **Avisos en el móvil**: cuando alguien apunta un viaje en el que vas, lo anula o te paga, con el
+  importe en el propio aviso. Sólo lo que mueve dinero de alguien y lo ha movido otra persona.
 
 ## Documentación
 

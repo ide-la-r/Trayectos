@@ -59,6 +59,16 @@ services:
           - key: INTERNAL_TASK_TOKEN
             generateValue: true
 
+          # Avisos en el móvil. Se generan UNA vez con
+          # `php artisan trayectos:vapid` y se pegan aquí a mano: cambiarlas
+          # obliga a que todo el mundo los vuelva a activar.
+          - key: VAPID_PUBLIC_KEY
+            sync: false
+          - key: VAPID_PRIVATE_KEY
+            sync: false
+          - key: VAPID_SUBJECT
+            sync: false # un mailto: o la URL de la aplicación
+
           # Correo (Brevo: 300 envíos al día sin tarjeta)
           - key: MAIL_MAILER
             value: smtp
