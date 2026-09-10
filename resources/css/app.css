@@ -23,8 +23,17 @@
         -webkit-text-size-adjust: 100%;
     }
 
+    /*
+     * El gris de fondo NO se declara aquí.
+     *
+     * En la aplicación el body es blanco a propósito —lo que iOS pinte fuera
+     * de la página toma ese color y así casa con la barra inferior— y el gris
+     * lo pone el contenedor de dentro. Declararlo aquí también obligaba a
+     * pisarlo con una utilidad y dejaba dos reglas diciendo cosas distintas.
+     * Las portadas de invitado y marketing lo ponen en su propio body.
+     */
     body {
-        @apply bg-neutral-50 text-neutral-900 antialiased;
+        @apply text-neutral-900 antialiased;
     }
 
     /* 16 px es el mínimo para que Safari en iOS no haga zoom al enfocar */

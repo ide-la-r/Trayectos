@@ -12,27 +12,16 @@
     <meta name="theme-color" content="#171717">
     <meta name="apple-mobile-web-app-capable" content="yes">
     {{--
-        «black-translucent», y esta vez con los deberes hechos.
-
-        Medido en el iPhone de Ismael con «default»: pantalla 932, ventana 873.
-        iOS se queda la barra de estado —59 puntos— y le da a la web lo que
-        sobra. Dentro de la web todo estaba bien (página 873, barra acabando en
-        873, hueco 0), pero esos 59 puntos quedan FUERA y ahí la página no
-        pinta: de ahí la franja.
-
-        Con «black-translucent» la web ocupa los 932 enteros. No queda nada
-        fuera, así que no hay sitio donde pueda salir una franja.
-
-        Esto ya estaba antes y se quitó porque daba dos problemas. Los dos
-        están arreglados desde entonces, y por eso se puede volver:
-
-          · El reloj se montaba sobre la cabecera → safe-top, comprobado.
-          · La página se quedaba más corta que la pantalla → min-h-dvh; antes
-            era min-h-full, que al no tener altura <html> no resolvía a nada.
+        Con «black-translucent» la web ocupa la pantalla entera y se pinta por
+        debajo del reloj; el hueco para no comérselo lo deja safe-top en la
+        cabecera. Con «default» iOS se queda la barra de estado y le da a la
+        web lo que sobra.
 
         OJO: iOS lee esto UNA vez, al añadir la aplicación a la pantalla de
         inicio, y no lo vuelve a mirar. Cambiarlo aquí no toca las
         instalaciones que ya existen: hay que borrarla y volver a añadirla.
+        Eso costó una tarde de diagnósticos sobre una instalación que llevaba
+        una versión distinta de la que estaba desplegada.
     --}}
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Trayectos">
@@ -114,20 +103,27 @@
         {{--
             Aquí es donde rueda el contenido en móvil.
 
-            min-h-0 NO es decorativo. Un hijo de un contenedor flexible trae de
+            El que rueda va a ANCHO COMPLETO y el ancho máximo lo pone el div de
+            dentro. Si los dos fueran el mismo elemento —como estaban— en una
+            tablet la zona que responde al dedo sería una columna estrecha en
+            mitad de la pantalla, y arrastrar por los lados no haría nada.
+
+            min-h-0 no es decorativo: un hijo de un contenedor flexible trae de
             fábrica min-height:auto, o sea que no encoge por debajo de su
-            contenido: en vez de rodar, crece y empuja, y la pantalla no se
-            puede bajar. Safari es estricto con esto y Chrome lo perdona, así
-            que no se ve probándolo en el escritorio.
+            contenido. Sin esto crece y empuja en vez de rodar, y la pantalla no
+            se puede bajar. Safari es estricto y Chrome lo perdona, así que no
+            se ve probándolo en el escritorio.
 
             overscroll-contain: que el rebote se quede dentro del contenido y no
             se encadene al documento, que es lo que hacía saltar la ventana.
         --}}
-        <main class="mx-auto w-full max-w-2xl min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 lg:max-w-4xl lg:flex-none lg:overflow-visible lg:overscroll-auto lg:px-8 lg:py-8">
-            <x-flash />
-            <x-install-banner />
+        <main data-scroller class="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain lg:flex-none lg:overflow-visible lg:overscroll-auto">
+            <div class="mx-auto max-w-2xl px-4 py-4 lg:max-w-4xl lg:px-8 lg:py-8">
+                <x-flash />
+                <x-install-banner />
 
-            {{ $slot }}
+                {{ $slot }}
+            </div>
         </main>
 
         <x-app-nav :group="$group ?? null" part="bottom" />

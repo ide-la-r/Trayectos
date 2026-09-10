@@ -8,6 +8,8 @@ import nativeMapLinks from './map-links';
 import tripMap from './trip-map';
 import fuelMap from './fuel-map';
 import pushToggle from './push';
+// No exporta nada: se engancha solo a los eventos que necesita
+import './app-shell';
 
 Alpine.data('placeField', placeField);
 Alpine.data('tripEstimate', tripEstimate);

@@ -24,9 +24,8 @@
     quedaba en el escritorio no era falta de contenido, era un diseño de móvil
     estirado a 1920 px; repartir el ancho lo elimina en lugar de rellenarlo.
 --}}
-{{-- Ya no hace falta anular el padding: el hueco de la barra inferior lo pone
-     ahora el contenedor de la aplicación, y aquí no hay barra. --}}
-<body class="min-h-dvh bg-neutral-50 lg:grid lg:min-h-screen lg:grid-cols-2">
+{{-- Aquí no hay barra inferior ni armazón: la página se desplaza normal. --}}
+<body class="min-h-dvh bg-neutral-50 lg:grid lg:min-h-dvh lg:grid-cols-2">
 
 {{-- ── Panel de marca ─────────────────────────────────────────────────────── --}}
 <div class="relative isolate flex flex-col overflow-hidden bg-neutral-950 text-neutral-50 lg:justify-between lg:p-12">
