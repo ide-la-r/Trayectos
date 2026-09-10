@@ -64,7 +64,12 @@ export default (config = {}) => ({
     /** Pantalla completa por CSS y no con la API del navegador: en iPhone esa API no existe. */
     async toggleExpand() {
         this.expanded = ! this.expanded;
-        document.body.classList.toggle('overflow-hidden', this.expanded);
+
+        // En <html> y NO en el body: el body ya lleva overflow-hidden como
+        // pieza del armazón móvil, y quitárselo al cerrar el mapa dejaba el
+        // documento desplazable otra vez. En escritorio, además, la clase en el
+        // body la pisaba lg:overflow-visible y la página rodaba tras el mapa.
+        document.documentElement.classList.toggle('overflow-hidden', this.expanded);
 
         await this.$nextTick();
         this.map?.resize();

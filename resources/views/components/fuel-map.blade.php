@@ -41,7 +41,8 @@
         <div x-show="visible && ! failed" x-cloak
              :class="expanded ? 'fixed inset-0 z-50 bg-white' : 'card p-4'">
 
-            <div class="relative" :class="expanded ? 'h-dvh' : ''">
+            {{-- h-app y no h-dvh: en la app instalada dvh sale corto (mira app.css) --}}
+            <div class="relative" :class="expanded ? 'h-app' : ''">
                 <div x-ref="canvas"
                      :class="expanded ? 'h-full w-full' : 'h-[26rem] w-full rounded-xl border border-neutral-200'"
                      class="overflow-hidden bg-neutral-100"

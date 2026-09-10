@@ -95,7 +95,7 @@
     Fondo opaco y sin desenfoque a propósito: un backdrop-filter aquí no aporta
     nada porque debajo no hay nada que valga la pena entrever.
 --}}
-<nav class="nav-bottom-bar shrink-0 border-t border-neutral-200 bg-white lg:hidden"
+<nav class="shrink-0 border-t border-neutral-200 bg-white lg:hidden"
      style="padding-bottom: env(safe-area-inset-bottom)"
      aria-label="Secciones">
     <div class="mx-auto flex max-w-2xl items-stretch px-2">

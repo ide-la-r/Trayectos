@@ -98,36 +98,31 @@
 }
 
 /*
- * La barra inferior NO lleva view-transition-name, y es a propósito.
+ * La altura del armazón de la aplicación, y por qué no es simplemente h-dvh.
  *
- * Lo llevaba, para que se quedase quieta mientras el resto de la página
- * transiciona. El precio era que en el iPhone se quedaba pintada en mitad de
- * la pantalla: Safari captura el elemento para la transición y a uno que es
- * position:fixed lo devuelve en las coordenadas de la captura, no en las que
- * le tocan. Se veía justo al entrar en una pantalla y arrastrar.
+ * En una web app instalada en el iPhone con viewport-fit=cover, WebKit tiene
+ * un fallo abierto desde 2020 (bugs 210009, 237961, 254868): si el documento es
+ * MÁS CORTO que la pantalla, la ventana que le cuenta a la página —innerHeight,
+ * 100dvh, 100svh, visualViewport— vale «alto de la pantalla MENOS los márgenes
+ * de seguridad», y sólo se corrige tras un gesto (rotar, arrastrar). Medido en
+ * el iPhone: 873 en una pantalla de 932; la barra de estado son justo 59.
  *
- * Sin nombre, la barra se funde con la página como todo lo demás. En 220 ms no
- * se nota, y a cambio siempre está donde tiene que estar.
+ * Por eso la barra inferior salía 59 puntos por encima del borde sólo en las
+ * pantallas cortas (Grupo, Coches) y «bajaba sola» al arrastrar: seguía al
+ * fondo de una ventana que iOS reportaba mal y luego corregía. Las pantallas
+ * largas desbordan y ahí el valor es correcto desde el principio.
  *
- * Y FUERA el translateZ, que era la mitad que quedaba del mismo fallo.
- *
- * Estaba puesto «por si ayudaba al repintado» en la pantalla del mapa. Lo que
- * hacía era lo contrario: un transform sobre un elemento fijo lo saca a su
- * propia capa de composición, y en iOS esa capa se queda dibujada donde
- * estaba antes de la transición entre páginas hasta que algo la mueve. De ahí
- * que al entrar en Grupo o en Coches la barra apareciera unos centímetros por
- * encima del borde y se colocara sola en cuanto se arrastraba el dedo.
- *
- * En las pantallas largas no se notaba porque el primer desplazamiento la
- * recolocaba antes de que a nadie le diera tiempo a verlo.
- *
- * Sin transform, la barra es un elemento fijo del montón y Safari la recoloca
- * cuando toca. La utilidad se queda declarada, vacía, porque es el gancho por
- * el que el JavaScript la encuentra.
+ * 100vh NO tiene ese fallo: en la app instalada no hay barra de navegador que
+ * lo haga bailar y vale la pantalla entera desde el primer fotograma (es el
+ * remedio documentado por quien abrió el bug 254868). En el navegador normal
+ * sí bailaría con la barra de Safari, así que ahí se sigue con dvh.
  */
-@utility nav-bottom-bar {
-    /* A propósito sin transform ni will-change: mira el comentario de arriba */
-    isolation: isolate;
+@utility h-app {
+    height: 100dvh;
+
+    @media (display-mode: standalone) {
+        height: 100vh;
+    }
 }
 
 /* Hueco para la barra de estado del iPhone.
