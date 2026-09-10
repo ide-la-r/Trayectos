@@ -115,6 +115,73 @@ class LedgerTest extends TestCase
         $this->assertSame(-1500, $balances->forMember($this->members['carlos']));
     }
 
+    /** Como trip(), pero diciendo qué parte del viaje hizo cada uno. */
+    private function tripByLeg(int $costCents, array $weightsByName, string $driver = 'ana'): Trip
+    {
+        $trip = $this->trip($costCents, [], $driver);
+
+        foreach ($weightsByName as $name => $weight) {
+            $trip->passengers()->create([
+                'group_member_id' => $this->members[$name]->id,
+                'weight' => $weight,
+            ]);
+        }
+
+        return $trip;
+    }
+
+    public function test_the_leg_someone_rode_alone_is_theirs_alone(): void
+    {
+        /*
+         * Ana conduce el viaje entero y recoge a Bea a mitad de camino. La
+         * primera mitad la hizo Ana sola y es suya entera; la segunda la
+         * pagan a medias:
+         *
+         *   3.000 → Ana 2.250 · Bea 750
+         *
+         * El reparto proporcional de antes daba 2.000 y 1.000: le cobraba de
+         * más a quien menos viaje había hecho.
+         */
+        $trip = $this->tripByLeg(3000, ['ana' => 1.0, 'bea' => 0.5]);
+        $this->ledger()->postTrip($trip);
+
+        $balances = app(BalanceService::class);
+
+        // Ana pone los 3.000 y le tocan 2.250: le deben 750
+        $this->assertSame(750, $balances->forMember($this->members['ana']));
+        $this->assertSame(-750, $balances->forMember($this->members['bea']));
+    }
+
+    public function test_a_passenger_who_rode_half_pays_half_when_the_driver_rides_free(): void
+    {
+        /*
+         * Con el conductor sin pagar su parte, un pasajero que va todo el
+         * viaje paga el viaje entero. Si sólo va la mitad, paga la mitad: el
+         * tramo en el que Ana iba sola no es de nadie y se lo come ella.
+         *
+         * Antes Bea pagaba los 3.000 completos por haber hecho la mitad.
+         */
+        $this->group->update(['driver_pays_own_share' => false]);
+
+        $trip = $this->tripByLeg(3000, ['ana' => 1.0, 'bea' => 0.5]);
+        $this->ledger()->postTrip($trip);
+
+        $balances = app(BalanceService::class);
+
+        $this->assertSame(1500, $balances->forMember($this->members['ana']));
+        $this->assertSame(-1500, $balances->forMember($this->members['bea']));
+    }
+
+    public function test_an_entry_with_legs_still_adds_up_to_zero(): void
+    {
+        // La regla que no se puede romper nunca, haya tramos o no
+        $trip = $this->tripByLeg(1237, ['ana' => 1.0, 'bea' => 0.5, 'carlos' => 0.25]);
+
+        $entry = $this->ledger()->postTrip($trip);
+
+        $this->assertSame(0, $entry->balanceCents());
+    }
+
     public function test_posting_the_same_trip_twice_does_not_duplicate_the_entry(): void
     {
         $trip = $this->trip(2400, ['ana', 'bea']);

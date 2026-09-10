@@ -20,7 +20,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class LedgerService
 {
-    public function __construct(private readonly MoneySplitter $splitter) {}
+    public function __construct(
+        private readonly MoneySplitter $splitter,
+        private readonly JourneyShares $journey,
+    ) {}
 
     /**
      * Asienta un trayecto. Es idempotente: si el viaje ya tiene asiento, lo
@@ -108,7 +111,21 @@ final class LedgerService
             $weights[$passenger->group_member_id] = (float) $passenger->weight;
         }
 
-        return $this->splitter->split($trip->total_cost_cents, $weights, seed: (int) $trip->id);
+        /*
+         * Tramo a tramo, no proporcional al peso: el trozo de viaje que hizo
+         * uno solo lo paga él entero. Mira JourneyShares.
+         */
+        $shares = $this->journey->fractions($weights);
+
+        /*
+         * Lo que se cobra puede ser menos que el viaje entero: si el conductor
+         * no paga su parte, los tramos en los que iba solo no son de nadie. Se
+         * reparte ESO y no el total, o el sobrante acabaría cayendo sobre los
+         * pasajeros, que es justo lo que no queremos.
+         */
+        $charged = (int) round($trip->total_cost_cents * array_sum($shares));
+
+        return $this->splitter->split($charged, $shares, seed: (int) $trip->id);
     }
 
     /** Registra un pago real entre dos miembros y su asiento correspondiente. */

@@ -96,8 +96,10 @@
             @foreach ($trip->passengers as $passenger)
                 <li class="badge bg-neutral-100 text-neutral-700">
                     {{ $passenger->member->user->name }}
+                    {{-- El porcentaje y no «medio viaje»: ahora puede ser un
+                         cuarto o tres cuartos, y decir «medio» seria mentir --}}
                     @if ($passenger->weight < 1)
-                        · medio viaje
+                        · {{ (int) round($passenger->weight * 100) }} % del viaje
                     @endif
                     @if ($passenger->group_member_id === $trip->driver_member_id)
                         · conduce

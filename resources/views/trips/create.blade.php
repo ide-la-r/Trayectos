@@ -170,7 +170,20 @@
                 <h2 class="text-sm font-semibold text-neutral-900">Quién va en el coche</h2>
                 <p class="mt-0.5 text-xs text-neutral-500">
                     Marca a todos los ocupantes, el conductor incluido: su peso cuenta en el consumo.
+                    A quien no haga el viaje entero, dile cuánto hizo — el trozo que alguien recorre
+                    solo lo paga solo.
                 </p>
+
+                @php
+                    // Cuánto del viaje hizo cada uno. Con esto el coste se reparte
+                    // tramo a tramo y no proporcional: mira JourneyShares.
+                    $tramos = [
+                        '1' => 'Todo el viaje',
+                        '0.75' => 'Tres cuartos',
+                        '0.5' => 'Medio viaje',
+                        '0.25' => 'Un cuarto',
+                    ];
+                @endphp
 
                 <div class="mt-3 space-y-2">
                     @foreach ($members as $option)
@@ -182,8 +195,10 @@
                             <select name="weights[{{ $option->id }}]"
                                     class="shrink-0 rounded-lg border-neutral-300 py-2 text-xs"
                                     aria-label="Cuánto viaje hace {{ $option->user->name }}">
-                                <option value="1" @selected(old("weights.{$option->id}", '1') == '1')>Todo el viaje</option>
-                                <option value="0.5" @selected(old("weights.{$option->id}") == '0.5')>Medio viaje</option>
+                                @foreach ($tramos as $valor => $texto)
+                                    <option value="{{ $valor }}"
+                                            @selected(old("weights.{$option->id}", '1') == $valor)>{{ $texto }}</option>
+                                @endforeach
                             </select>
                         </label>
                     @endforeach

@@ -76,6 +76,37 @@ climatización y tramos llanos. Sin él, un eléctrico en un descenso largo sald
 
 Poderes caloríficos usados: gasolina 32,0 MJ/L · diésel 35,8 MJ/L · GLP 25,0 MJ/kg · GNC 38,0 MJ/kg.
 
+## Reparto entre los ocupantes, tramo a tramo
+
+Cuando todos hacen el viaje entero se parte a partes iguales y no hay más que hablar. Lo
+interesante es cuando alguien sólo hace un trozo: se le pregunta **cuánto del viaje hizo** y el
+coste se reparte por tramos, no en proporción a ese trozo.
+
+La cuenta es la del taxi compartido: el viaje se corta por los puntos donde cambia la gente que va
+dentro, y **cada tramo lo pagan a partes iguales los que iban en él**.
+
+Ana hace el viaje entero y recoge a Bea a mitad de camino, 30 €:
+
+```
+0 ──────────── 0,5 ──────────── 1
+   Ana y Bea        Ana sola
+   15 € entre dos   15 € para Ana
+   7,50 cada una
+
+Ana 22,50 €  ·  Bea 7,50 €
+```
+
+Repartir proporcional al trozo —lo que se hacía antes— daba 20 € y 10 €: le cobraba de más a quien
+menos viaje había hecho, porque le pasaba parte del tramo que Ana recorrió sola.
+
+Dos consecuencias que conviene tener claras:
+
+- **El orden en que se suben no importa.** Sólo cuenta cuánta gente iba dentro en cada momento, así
+  que da igual si a Bea la recogen por el camino o se baja antes de llegar.
+- **Las partes no tienen por qué sumar el viaje entero.** Si el grupo ha decidido que el conductor
+  no paga su parte, el tramo en el que iba solo no es de nadie y se lo come él. Antes, un pasajero
+  que hacía media ruta pagaba el viaje completo.
+
 ## Comprobación
 
 Madrid → Puerto de Navacerrada, 60 km, `D⁺` = 900 m, `D⁻` = 120 m, cuatro ocupantes:
