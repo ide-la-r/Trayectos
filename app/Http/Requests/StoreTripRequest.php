@@ -4,18 +4,62 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Services\Geocoding\PlaceResolver;
+use App\Support\FuelArea;
 use App\Support\Money;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 class StoreTripRequest extends FormRequest
 {
-    /** Aquí se escriben los decimales con coma; 'numeric' sólo entiende el punto. */
     protected function prepareForValidation(): void
     {
+        // Aquí se escriben los decimales con coma; 'numeric' sólo entiende el punto
         $this->merge([
             'distance_km' => Money::normalizeInput($this->input('distance_km')),
         ]);
+
+        $this->resolveMissingPlaces();
+    }
+
+    /**
+     * Buscar las coordenadas de lo que se haya escrito sin elegir de la lista.
+     *
+     * Elegir del desplegable las rellena, pero cualquiera escribe «Málaga» y le
+     * da a guardar sin tocar la lista. Antes eso se contestaba con «elige
+     * origen y destino del buscador», que es pedirle a la persona un dato que
+     * la aplicación ya sabe.
+     *
+     * Va antes de validar para que el resto de reglas —y el aviso de más
+     * abajo— vean el viaje ya completo. Sólo se busca lo que falta.
+     */
+    private function resolveMissingPlaces(): void
+    {
+        // Con los kilómetros a mano no hace falta ruta ninguna
+        if (filled($this->input('distance_km'))) {
+            return;
+        }
+
+        $resolver = app(PlaceResolver::class);
+        $area = FuelArea::fromArray($this->session()->get(FuelArea::SESSION_KEY));
+
+        foreach (['origin', 'destination'] as $field) {
+            if (filled($this->input("{$field}_lat")) && filled($this->input("{$field}_lon"))) {
+                continue;
+            }
+
+            $found = $resolver->resolve(
+                $this->input("{$field}_label"),
+                $this->input("{$field}_lat"),
+                $this->input("{$field}_lon"),
+                nearLat: $area?->lat,
+                nearLon: $area?->lon,
+            );
+
+            if ($found) {
+                $this->merge(["{$field}_lat" => $found[0], "{$field}_lon" => $found[1]]);
+            }
+        }
     }
 
     public function rules(): array
@@ -68,12 +112,17 @@ class StoreTripRequest extends FormRequest
         $validator->after(function (Validator $validator) {
             $hasCoordinates = filled($this->input('origin_lat')) && filled($this->input('destination_lat'));
 
-            // Sin coordenadas no hay forma de calcular la ruta: hace falta que
-            // alguien ponga los kilómetros a mano.
+            /*
+             * Llegados aquí ya se ha intentado buscar los sitios escritos a
+             * mano, así que si siguen sin coordenadas es que el buscador no los
+             * conoce. El aviso dice eso y no «elige del buscador», que era
+             * desconcertante para quien había escrito los dos sitios.
+             */
             if (! $hasCoordinates && blank($this->input('distance_km'))) {
                 $validator->errors()->add(
                     'distance_km',
-                    'Elige origen y destino del buscador, o escribe los kilómetros a mano.'
+                    'No hemos encontrado esos sitios en el mapa. Prueba a elegirlos de la lista '
+                        .'que sale al escribir, o pon los kilómetros a mano aquí abajo.'
                 );
             }
 

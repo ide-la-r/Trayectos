@@ -34,12 +34,30 @@ class WebFlowTest extends TestCase
                     'geometry' => ['coordinates' => [[-3.70, 40.41, 650], [-4.00, 40.78, 1850]]],
                 ]],
             ]),
-            '*photon*' => Http::response([
-                'features' => [[
-                    'properties' => ['name' => 'Navacerrada', 'city' => 'Navacerrada', 'state' => 'Madrid', 'country' => 'España'],
-                    'geometry' => ['coordinates' => [-4.003585, 40.788913]],
-                ]],
-            ]),
+            /*
+             * El buscador de sitios se comporta como el de verdad: conoce unos
+             * cuantos y del resto no sabe nada. Devolver siempre un resultado
+             * haría pasar tests que en producción fallarían, y al revés.
+             */
+            '*photon*' => function ($request) {
+                parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $params);
+
+                $conocidos = [
+                    'madrid' => ['Madrid', -3.703790, 40.416775],
+                    'navacerrada' => ['Navacerrada', -4.003585, 40.788913],
+                ];
+
+                foreach ($conocidos as $clave => [$nombre, $lon, $lat]) {
+                    if (str_contains(mb_strtolower($params['q'] ?? ''), $clave)) {
+                        return Http::response(['features' => [[
+                            'properties' => ['name' => $nombre, 'city' => $nombre, 'state' => 'Madrid', 'country' => 'España'],
+                            'geometry' => ['coordinates' => [$lon, $lat]],
+                        ]]]);
+                    }
+                }
+
+                return Http::response(['features' => []]);
+            },
             '*' => Http::response([], 503),
         ]);
 
@@ -156,6 +174,98 @@ class WebFlowTest extends TestCase
         $this->assertSame(2, $trip->passengers()->count());
     }
 
+    public function test_los_sitios_escritos_a_mano_se_buscan_solos(): void
+    {
+        /*
+         * El caso que se encontró un amigo de Ismael la primera vez que usó la
+         * aplicación: escribió el origen y el destino, no tocó el desplegable,
+         * y el formulario le contestó «elige origen y destino del buscador».
+         * La aplicación sabe perfectamente dónde están esos sitios, así que
+         * ahora los busca ella y calcula los kilómetros.
+         */
+        $this->seedPrice();
+
+        $group = Group::factory()->create();
+        $ana = User::factory()->create();
+        $anaMember = GroupMember::factory()->create(['group_id' => $group->id, 'user_id' => $ana->id]);
+        $vehicle = Vehicle::factory()->create(['owner_id' => $ana->id]);
+
+        $this->actingAs($ana)
+            ->post(route('trips.store', $group), [
+                'vehicle_id' => $vehicle->id,
+                'driver_member_id' => $anaMember->id,
+                'travelled_on' => now()->toDateString(),
+                // Escritos a mano, SIN coordenadas y SIN kilómetros
+                'origin_label' => 'Madrid',
+                'destination_label' => 'Navacerrada',
+                'passengers' => [$anaMember->id],
+            ])
+            ->assertSessionHasNoErrors();
+
+        $trip = Trip::firstOrFail();
+
+        // Las coordenadas las puso el buscador y la ruta salió de ellas
+        $this->assertNotNull($trip->origin_lat);
+        $this->assertNotNull($trip->destination_lat);
+        $this->assertSame(60000, $trip->distance_m);
+        $this->assertSame('ors', $trip->route_source);
+
+        // Y el sitio se llama como lo escribió la persona, no como lo llame el mapa
+        $this->assertSame('Madrid', $trip->origin_label);
+    }
+
+    public function test_si_el_buscador_no_conoce_el_sitio_se_pide_la_distancia(): void
+    {
+        $group = Group::factory()->create();
+        $ana = User::factory()->create();
+        $anaMember = GroupMember::factory()->create(['group_id' => $group->id, 'user_id' => $ana->id]);
+        $vehicle = Vehicle::factory()->create(['owner_id' => $ana->id]);
+
+        $this->actingAs($ana)
+            ->post(route('trips.store', $group), [
+                'vehicle_id' => $vehicle->id,
+                'driver_member_id' => $anaMember->id,
+                'travelled_on' => now()->toDateString(),
+                'origin_label' => 'Villarriba de los Sitios Inventados',
+                'destination_label' => 'Villabajo del Mismo Sitio',
+                'passengers' => [$anaMember->id],
+            ])
+            ->assertSessionHasErrors('distance_km');
+
+        // El aviso explica lo que pasa de verdad, no «elige del buscador»
+        $this->assertStringContainsString(
+            'No hemos encontrado esos sitios en el mapa',
+            session('errors')->first('distance_km'),
+        );
+    }
+
+    public function test_con_los_kilometros_a_mano_no_se_busca_nada(): void
+    {
+        // Quien pone los kilómetros no necesita ruta, y no hay que molestar al
+        // servicio de mapas por gusto
+        $this->seedPrice();
+
+        $group = Group::factory()->create();
+        $ana = User::factory()->create();
+        $anaMember = GroupMember::factory()->create(['group_id' => $group->id, 'user_id' => $ana->id]);
+        $vehicle = Vehicle::factory()->create(['owner_id' => $ana->id]);
+
+        $this->actingAs($ana)
+            ->post(route('trips.store', $group), [
+                'vehicle_id' => $vehicle->id,
+                'driver_member_id' => $anaMember->id,
+                'travelled_on' => now()->toDateString(),
+                'origin_label' => 'Un sitio cualquiera',
+                'destination_label' => 'Otro sitio cualquiera',
+                'distance_km' => '42',
+                'passengers' => [$anaMember->id],
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(42000, Trip::firstOrFail()->distance_m);
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'photon'));
+    }
+
     public function test_the_driver_must_be_among_the_occupants(): void
     {
         $group = Group::factory()->create();
@@ -179,25 +289,6 @@ class WebFlowTest extends TestCase
             ->assertSessionHasErrors('passengers');
 
         $this->assertSame(0, Trip::count());
-    }
-
-    public function test_a_trip_without_coordinates_or_distance_is_rejected(): void
-    {
-        $group = Group::factory()->create();
-        $ana = User::factory()->create();
-        $member = GroupMember::factory()->create(['group_id' => $group->id, 'user_id' => $ana->id]);
-        $vehicle = Vehicle::factory()->create(['owner_id' => $ana->id]);
-
-        $this->actingAs($ana)
-            ->post(route('trips.store', $group), [
-                'vehicle_id' => $vehicle->id,
-                'driver_member_id' => $member->id,
-                'travelled_on' => now()->toDateString(),
-                'origin_label' => 'Sitio sin coordenadas',
-                'destination_label' => 'Otro sitio',
-                'passengers' => [$member->id],
-            ])
-            ->assertSessionHasErrors('distance_km');
     }
 
     public function test_a_vehicle_needs_the_data_its_technology_requires(): void
