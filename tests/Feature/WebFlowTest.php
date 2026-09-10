@@ -10,6 +10,7 @@ use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -237,6 +238,84 @@ class WebFlowTest extends TestCase
             'No hemos encontrado esos sitios en el mapa',
             session('errors')->first('distance_km'),
         );
+    }
+
+    public function test_si_el_buscador_de_sitios_se_cae_el_formulario_no_revienta(): void
+    {
+        /*
+         * Esto tumbó la aplicación con un 500 el primer día que la usó alguien
+         * de fuera. Photon es un servicio ajeno y gratuito: se cae, tarda y a
+         * veces corta. Cuando eso pasaba mientras se buscaban los sitios
+         * escritos a mano, la excepción subía sin que nadie la recogiera.
+         *
+         * Antes daba igual porque el buscador sólo corría en el autocompletado
+         * y el navegador se comía el fallo; desde que corre al guardar, se
+         * lleva por delante el formulario entero.
+         */
+        Http::fake(['*photon*' => fn () => throw new ConnectionException('Se agotó el tiempo de espera')]);
+
+        $group = Group::factory()->create();
+        $ana = User::factory()->create();
+        $anaMember = GroupMember::factory()->create(['group_id' => $group->id, 'user_id' => $ana->id]);
+        $vehicle = Vehicle::factory()->create(['owner_id' => $ana->id]);
+
+        $this->actingAs($ana)
+            ->post(route('trips.store', $group), [
+                'vehicle_id' => $vehicle->id,
+                'driver_member_id' => $anaMember->id,
+                'travelled_on' => now()->toDateString(),
+                'origin_label' => 'Madrid',
+                'destination_label' => 'Navacerrada',
+                'passengers' => [$anaMember->id],
+            ])
+            // Se vuelve al formulario con un aviso, NO un 500
+            ->assertRedirect()
+            ->assertSessionHasErrors('distance_km');
+
+        $this->assertSame(0, Trip::count());
+    }
+
+    public function test_si_se_caen_todos_los_servicios_el_viaje_se_apunta_igual(): void
+    {
+        /*
+         * El peor caso: la ruta no responde, las altitudes tampoco, y la
+         * persona sí ha elegido los sitios de la lista. El viaje tiene que
+         * quedar apuntado —en línea recta corregida y en llano— y no devolver
+         * un error. Un coste algo corto es mejor que perder el viaje.
+         */
+        $this->seedPrice();
+
+        Http::fake([
+            '*openrouteservice*' => fn () => throw new ConnectionException('caído'),
+            '*opentopodata*' => fn () => throw new ConnectionException('caído'),
+            '*' => Http::response([], 503),
+        ]);
+
+        $group = Group::factory()->create();
+        $ana = User::factory()->create();
+        $anaMember = GroupMember::factory()->create(['group_id' => $group->id, 'user_id' => $ana->id]);
+        $vehicle = Vehicle::factory()->create(['owner_id' => $ana->id]);
+
+        $this->actingAs($ana)
+            ->post(route('trips.store', $group), [
+                'vehicle_id' => $vehicle->id,
+                'driver_member_id' => $anaMember->id,
+                'travelled_on' => now()->toDateString(),
+                'origin_label' => 'Madrid',
+                'destination_label' => 'Navacerrada',
+                'origin_lat' => 40.416775,
+                'origin_lon' => -3.703790,
+                'destination_lat' => 40.788913,
+                'destination_lon' => -4.003585,
+                'passengers' => [$anaMember->id],
+            ])
+            ->assertSessionHasNoErrors();
+
+        $trip = Trip::firstOrFail();
+
+        $this->assertGreaterThan(0, $trip->distance_m);
+        $this->assertSame('haversine', $trip->route_source);
+        $this->assertSame(0, $trip->ascent_m);   // sin altitudes, en llano
     }
 
     public function test_con_los_kilometros_a_mano_no_se_busca_nada(): void

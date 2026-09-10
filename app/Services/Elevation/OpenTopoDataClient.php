@@ -8,6 +8,7 @@ use App\Services\Support\ApiQuota;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Perfil de altitud desde la API pública de Open Topo Data.
@@ -53,11 +54,28 @@ final class OpenTopoDataClient
             $points
         ));
 
-        $response = Http::timeout((int) config('trayectos.opentopodata.timeout'))
-            ->retry(2, 1200, throw: false)
-            ->get(rtrim((string) config('trayectos.opentopodata.base_url'), '/')."/v1/{$dataset}", [
-                'locations' => $locations,
-            ]);
+        /*
+         * Envuelto por lo mismo que el buscador de sitios: «retry(throw:
+         * false)» se traga los errores HTTP, pero NO que la conexión se caiga
+         * o se agote el tiempo. Y esto corre al apuntar un viaje cuando el
+         * servicio de rutas no está disponible, así que una excepción aquí
+         * devuelve un error 500 justo a quien está guardando.
+         *
+         * Sin altitudes el viaje se apunta igual, en llano: mejor un coste
+         * algo corto que ninguno.
+         */
+        try {
+            $response = Http::timeout((int) config('trayectos.opentopodata.timeout'))
+                ->retry(2, 1200, throw: false)
+                ->get(rtrim((string) config('trayectos.opentopodata.base_url'), '/')."/v1/{$dataset}", [
+                    'locations' => $locations,
+                ]);
+        } catch (Throwable $exception) {
+            Log::warning('Open Topo Data no ha contestado', ['error' => $exception->getMessage()]);
+            $this->quota->consume();
+
+            return null;
+        }
 
         $this->quota->consume();
 

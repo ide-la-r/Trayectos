@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Autocompletado de direcciones con Photon (OpenStreetMap), sin clave.
@@ -36,6 +37,15 @@ final class GeocodingClient
      * primero Malaga (California) y la de Andalucía en cuarto lugar.
      */
     private const BBOX = '-19.0,27.4,4.6,44.0';
+
+    /*
+     * Seis segundos y no diez: esto ya no sólo alimenta el autocompletado, que
+     * va por detrás y a nadie le importa que tarde. También corre al guardar
+     * un viaje, con la persona esperando delante del formulario. Si Photon no
+     * ha contestado en seis segundos, más vale pedir los kilómetros a mano que
+     * tener a alguien mirando una pantalla en blanco.
+     */
+    private const TIMEOUT = 6;
 
     /**
      * Cuánto se agrupa la distancia al ordenar, en kilómetros.
@@ -79,24 +89,45 @@ final class GeocodingClient
             return $this->hydrate($cached);
         }
 
-        $response = Http::withHeaders([
-            // Los servicios OSM exigen identificar la aplicación
-            'User-Agent' => 'LibroDeTrayectos/1.0 (proyecto personal)',
-        ])
-            ->timeout(10)
-            ->get(self::BASE_URL, [
-                'q' => $query,
-                'limit' => $limit,
-                // Verificado el 2026-08-17: 'lang=es' devuelve 400. Con
-                // 'default' los topónimos llegan ya en el idioma local, que
-                // para España es exactamente lo que se quiere.
-                'lang' => 'default',
-                // Se le pasa igualmente, aunque su sesgo sea flojo: no estorba
-                // y algo ayuda. El orden de verdad lo pone rank() más abajo.
-                'lat' => $near ? $nearLat : self::BIAS_LAT,
-                'lon' => $near ? $nearLon : self::BIAS_LON,
-                'bbox' => self::BBOX,
-            ]);
+        /*
+         * Envuelto porque Photon es un servicio ajeno y gratuito: se cae,
+         * tarda y a veces corta la conexión. Sin esto la excepción sube y se
+         * lleva por delante lo que estuviera haciendo quien preguntó.
+         *
+         * Pasó de verdad: mientras el buscador sólo servía al autocompletado
+         * daba igual —el navegador se comía el fallo—, pero desde que también
+         * resuelve los sitios escritos a mano al guardar un viaje, un Photon
+         * lento devolvía un error 500 al darle a apuntar. Lo estrenó así el
+         * primer amigo que usó la aplicación.
+         *
+         * Quedarse sin resultados es lo correcto aquí: quien llama ya sabe
+         * qué hacer sin ellos (enseñar la lista vacía, o pedir los kilómetros
+         * a mano).
+         */
+        try {
+            $response = Http::withHeaders([
+                // Los servicios OSM exigen identificar la aplicación
+                'User-Agent' => 'LibroDeTrayectos/1.0 (proyecto personal)',
+            ])
+                ->timeout(self::TIMEOUT)
+                ->get(self::BASE_URL, [
+                    'q' => $query,
+                    'limit' => $limit,
+                    // Verificado el 2026-08-17: 'lang=es' devuelve 400. Con
+                    // 'default' los topónimos llegan ya en el idioma local, que
+                    // para España es exactamente lo que se quiere.
+                    'lang' => 'default',
+                    // Se le pasa igualmente, aunque su sesgo sea flojo: no estorba
+                    // y algo ayuda. El orden de verdad lo pone rank() más abajo.
+                    'lat' => $near ? $nearLat : self::BIAS_LAT,
+                    'lon' => $near ? $nearLon : self::BIAS_LON,
+                    'bbox' => self::BBOX,
+                ]);
+        } catch (Throwable $exception) {
+            Log::warning('Photon no ha contestado', ['error' => $exception->getMessage()]);
+
+            return [];
+        }
 
         if ($response->failed()) {
             Log::info('Photon no ha respondido', ['status' => $response->status()]);
