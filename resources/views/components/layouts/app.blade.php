@@ -117,5 +117,8 @@
         </main>
     </div>
 
+    {{-- MEDIDOR TEMPORAL — QUITAR con la captura. Sin condición porque dentro
+         de la aplicación instalada no se puede escribir una dirección. --}}
+    <x-viewport-probe />
 </body>
 </html>
