@@ -113,5 +113,10 @@
             {{ $slot }}
         </main>
     </div>
+
+    {{-- Medidor temporal, sólo con ?medir=1. Quitar cuando esté resuelto. --}}
+    @if (request()->boolean('medir'))
+        <x-viewport-probe />
+    @endif
 </body>
 </html>
