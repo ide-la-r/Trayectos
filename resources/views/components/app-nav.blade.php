@@ -34,7 +34,9 @@
 @endphp
 
 {{-- ── Columna lateral (escritorio) ───────────────────────────────────────── --}}
-<aside class="vt-nav-side fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-neutral-200 bg-white px-4 py-5 lg:flex">
+{{-- safe-top por el iPad instalado, donde esta columna también arranca por
+     debajo de la barra de estado --}}
+<aside class="vt-nav-side safe-top fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-neutral-200 bg-white px-4 py-5 lg:flex">
     <a href="{{ route('dashboard') }}" class="mb-8 px-2 text-neutral-900" aria-label="Ir al panel">
         <x-logo :wordmark="true" size="size-9" />
     </a>

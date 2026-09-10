@@ -127,6 +127,23 @@
     backface-visibility: hidden;
 }
 
+/* Hueco para la barra de estado del iPhone.
+ *
+ * La aplicación declara «apple-mobile-web-app-status-bar-style:
+ * black-translucent», que le dice a iOS que pinte la web POR DEBAJO del reloj
+ * y la cobertura. Sin esto la cabecera se les monta encima y parece que la
+ * aplicación entera se ha subido.
+ *
+ * Sólo lo sufre quien la tiene instalada en la pantalla de inicio: desde el
+ * navegador, la barra del propio Safari ya ocupa ese sitio. Por eso pasó
+ * desapercibido hasta que hubo que reinstalarla para ver el icono nuevo.
+ *
+ * En cualquier otro sitio env() vale 0 y esto no hace nada.
+ */
+@utility safe-top {
+    padding-top: env(safe-area-inset-top);
+}
+
 /* Movimiento ambiental del asfalto de la marca: es decorativo y va sobre un
    elemento que ya está visible, así que no esconde contenido en reposo. */
 @keyframes road-breathe {

@@ -28,13 +28,18 @@
 
 {{-- ── Panel de marca ─────────────────────────────────────────────────────── --}}
 <div class="relative isolate flex flex-col overflow-hidden bg-neutral-950 text-neutral-50 lg:justify-between lg:p-12">
-    {{-- Solo el asfalto: el sol quedaba cortado por el borde de la franja --}}
-    <svg class="pointer-events-none absolute -bottom-20 left-1/2 -z-10 w-80 max-w-none -translate-x-1/2 opacity-[0.08] lg:-bottom-40 lg:left-auto lg:right-0 lg:w-[34rem] lg:translate-x-1/4"
-         viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">
-        <path d="M6 45 L42 45 L28.6 14.6 L19.4 14.6 Z"/>
+    {{-- Las curvas de nivel de la marca, muy tenues, como en la portada --}}
+    <svg class="pointer-events-none absolute -bottom-20 left-1/2 -z-10 w-80 max-w-none -translate-x-1/2 opacity-[0.09] lg:-bottom-40 lg:left-auto lg:right-0 lg:w-[34rem] lg:translate-x-1/4"
+         viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2"
+         stroke-linecap="round" aria-hidden="true">
+        <path d="M14 34.4 Q 24 18.4 34 34.4" opacity="0.55"/>
+        <path d="M9 29.4 Q 24 8.4 39 29.4"/>
+        <path d="M4 24.4 Q 24 -1.6 44 24.4" opacity="0.3"/>
     </svg>
 
-    <div class="mx-auto max-w-md px-5 pt-10 pb-16 text-center lg:mx-0 lg:max-w-none lg:px-0 lg:pt-0 lg:pb-0 lg:text-left">
+    {{-- safe-top: instalada en el iPhone, esta franja se pinta por debajo del
+         reloj y el nombre se le montaba encima --}}
+    <div class="safe-top mx-auto max-w-md px-5 pt-10 pb-16 text-center lg:mx-0 lg:max-w-none lg:px-0 lg:pt-0 lg:pb-0 lg:text-left">
         <a href="{{ route('home') }}" class="inline-flex" aria-label="Volver a la portada">
             <span class="grid size-14 place-items-center overflow-hidden rounded-[28%] bg-white/10 ring-1 ring-white/15">
                 <svg viewBox="0 0 48 48" class="size-full" fill="currentColor" aria-hidden="true">
