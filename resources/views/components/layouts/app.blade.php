@@ -12,26 +12,29 @@
     <meta name="theme-color" content="#171717">
     <meta name="apple-mobile-web-app-capable" content="yes">
     {{--
-        «default» y NO «black-translucent», que es lo que había.
+        «black-translucent», y esta vez con los deberes hechos.
 
-        Con black-translucent iOS pinta la web a pantalla completa, por debajo
-        del reloj y del indicador de inicio, y queda en manos de la página
-        dejar hueco a los dos. Se hizo con env(safe-area-inset-*) y aun así
-        quedaba una franja abajo en las pantallas con poco contenido, que no
-        hubo forma de cerrar: tres intentos, ninguno funcionó.
+        Medido en el iPhone de Ismael con «default»: pantalla 932, ventana 873.
+        iOS se queda la barra de estado —59 puntos— y le da a la web lo que
+        sobra. Dentro de la web todo estaba bien (página 873, barra acabando en
+        873, hueco 0), pero esos 59 puntos quedan FUERA y ahí la página no
+        pinta: de ahí la franja.
 
-        Con «default» el sistema reserva él esas dos franjas y la web ocupa lo
-        que queda en medio. Se pierde el efecto de pantalla completa —la barra
-        de estado deja de fundirse con el fondo— y a cambio no hay huecos en
-        ningún iPhone y no depende de acertar con los márgenes.
+        Con «black-translucent» la web ocupa los 932 enteros. No queda nada
+        fuera, así que no hay sitio donde pueda salir una franja.
 
-        OJO: iOS lee esto UNA vez, cuando se añade la aplicación a la pantalla
-        de inicio, y no lo vuelve a mirar. Cambiarlo aquí no arregla las
+        Esto ya estaba antes y se quitó porque daba dos problemas. Los dos
+        están arreglados desde entonces, y por eso se puede volver:
+
+          · El reloj se montaba sobre la cabecera → safe-top, comprobado.
+          · La página se quedaba más corta que la pantalla → min-h-dvh; antes
+            era min-h-full, que al no tener altura <html> no resolvía a nada.
+
+        OJO: iOS lee esto UNA vez, al añadir la aplicación a la pantalla de
+        inicio, y no lo vuelve a mirar. Cambiarlo aquí no toca las
         instalaciones que ya existen: hay que borrarla y volver a añadirla.
-        Eso es justo lo que destapó el problema — una instalación vieja, de
-        antes de que existiera la etiqueta, nunca la había aplicado.
     --}}
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Trayectos">
     {{-- Safari ignora los iconos del manifest para la pantalla de inicio --}}
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url('/icons/apple-touch-icon.png') }}">
@@ -114,14 +117,5 @@
         </main>
     </div>
 
-    {{--
-        MEDIDOR TEMPORAL — QUITAR EN CUANTO ESTÉ LA CAPTURA.
-
-        Va sin condición a propósito: dentro de la aplicación instalada no se
-        puede escribir una dirección, así que con ?medir=1 no había forma de
-        encenderlo justo donde falla. Se enseña a todo el mundo durante un
-        despliegue y se quita.
-    --}}
-    <x-viewport-probe />
 </body>
 </html>
