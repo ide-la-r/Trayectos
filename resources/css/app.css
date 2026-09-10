@@ -21,20 +21,6 @@
     html {
         /* Evita el zoom automático de iOS al enfocar un campo */
         -webkit-text-size-adjust: 100%;
-
-        /*
-         * Blanco y no gris como el resto de la página, y no es un descuido.
-         *
-         * En un iPhone instalado, la franja del indicador de inicio —lo de
-         * abajo del todo, por debajo de la barra de navegación— la pinta el
-         * sistema con el fondo del documento, no con el del body. Con el gris
-         * quedaba una banda a distinto color justo debajo de la barra, que es
-         * blanca, y parecía que la barra flotaba.
-         *
-         * El body sigue siendo gris y lo tapa entero, así que este blanco sólo
-         * se ve ahí abajo, que es exactamente donde hace falta.
-         */
-        background-color: #fff;
     }
 
     body {
@@ -139,25 +125,6 @@
 @utility nav-bottom-bar {
     transform: translateZ(0);
     backface-visibility: hidden;
-}
-
-/*
- * Prolonga el blanco de la barra por debajo de ella.
- *
- * Se probó a solas y NO arregló la franja del iPhone —eso era que la página
- * se quedaba más corta que la pantalla, y se arregla con min-h-dvh en el
- * body—, pero se queda porque cubre el rebote: al arrastrar la página hacia
- * arriba, por debajo de la barra asomaba el fondo. Si no hay nada que tapar,
- * esta pieza cae fuera de la pantalla y no la ve nadie.
- */
-.nav-bottom-bar::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    right: 0;
-    left: 0;
-    height: 8rem;
-    background-color: #fff;
 }
 
 /* Hueco para la barra de estado del iPhone.
