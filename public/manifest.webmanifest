@@ -9,7 +9,7 @@
     "display": "standalone",
     "orientation": "portrait",
     "theme_color": "#171717",
-    "background_color": "#fafafa",
+    "background_color": "#ffffff",
     "categories": ["finance", "travel", "utilities"],
     "icons": [
         {

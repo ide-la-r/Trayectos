@@ -141,6 +141,29 @@
     backface-visibility: hidden;
 }
 
+/*
+ * Prolonga el blanco de la barra por debajo de ella.
+ *
+ * En el iPhone instalado quedaba una franja de otro color entre la barra y el
+ * borde de la pantalla. La barra está en «bottom: 0» y ya lleva su
+ * env(safe-area-inset-bottom), así que ese hueco no es suyo: es que el área de
+ * la página no llega hasta abajo del todo.
+ *
+ * En vez de perseguir por qué —depende de la versión de iOS y de cómo se haya
+ * añadido la aplicación a la pantalla de inicio—, la barra se alarga hacia
+ * abajo con una pieza del mismo blanco. Si no hay hueco, esa pieza se queda
+ * fuera de la pantalla y no la ve nadie; si lo hay, lo tapa. Se cancela sola.
+ */
+.nav-bottom-bar::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    height: 8rem;
+    background-color: #fff;
+}
+
 /* Hueco para la barra de estado del iPhone.
  *
  * La aplicación declara «apple-mobile-web-app-status-bar-style:
