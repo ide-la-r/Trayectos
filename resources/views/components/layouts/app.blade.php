@@ -123,9 +123,20 @@
             </div>
         </header>
 
-        {{-- Aquí es donde rueda el contenido en móvil. El desplazamiento suave
-             de iOS se pide a mano: dentro de un contenedor no viene solo. --}}
-        <main class="mx-auto w-full max-w-2xl flex-1 overflow-y-auto px-4 py-4 lg:max-w-4xl lg:flex-none lg:overflow-visible lg:px-8 lg:py-8"
+        {{--
+            Aquí es donde rueda el contenido en móvil.
+
+            min-h-0 NO es decorativo. Un hijo de un contenedor flexible trae de
+            fábrica min-height:auto, o sea que no encoge por debajo de su
+            contenido: en vez de rodar, crece y empuja. El resultado es una
+            pantalla que no se puede bajar, que es justo lo que pasó al
+            estrenar esto. Safari es estricto con esto y Chrome lo perdona, así
+            que no se ve probándolo en el escritorio.
+
+            El desplazamiento suave de iOS se pide a mano: dentro de un
+            contenedor no viene solo.
+        --}}
+        <main class="mx-auto w-full max-w-2xl min-h-0 flex-1 overflow-y-auto px-4 py-4 lg:max-w-4xl lg:flex-none lg:overflow-visible lg:px-8 lg:py-8"
               style="-webkit-overflow-scrolling: touch">
             <x-flash />
             <x-install-banner />
