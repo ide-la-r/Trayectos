@@ -109,12 +109,25 @@
  * Sin nombre, la barra se funde con la página como todo lo demás. En 220 ms no
  * se nota, y a cambio siempre está donde tiene que estar.
  *
- * El translateZ se queda: le da su propia capa de composición, que ayuda en la
- * pantalla de precios, donde el lienzo WebGL del mapa complica el repintado.
+ * Y FUERA el translateZ, que era la mitad que quedaba del mismo fallo.
+ *
+ * Estaba puesto «por si ayudaba al repintado» en la pantalla del mapa. Lo que
+ * hacía era lo contrario: un transform sobre un elemento fijo lo saca a su
+ * propia capa de composición, y en iOS esa capa se queda dibujada donde
+ * estaba antes de la transición entre páginas hasta que algo la mueve. De ahí
+ * que al entrar en Grupo o en Coches la barra apareciera unos centímetros por
+ * encima del borde y se colocara sola en cuanto se arrastraba el dedo.
+ *
+ * En las pantallas largas no se notaba porque el primer desplazamiento la
+ * recolocaba antes de que a nadie le diera tiempo a verlo.
+ *
+ * Sin transform, la barra es un elemento fijo del montón y Safari la recoloca
+ * cuando toca. La utilidad se queda declarada, vacía, porque es el gancho por
+ * el que el JavaScript la encuentra.
  */
 @utility nav-bottom-bar {
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    /* A propósito sin transform ni will-change: mira el comentario de arriba */
+    isolation: isolate;
 }
 
 /*
