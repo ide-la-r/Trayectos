@@ -18,18 +18,9 @@
         </div>
 
         <div class="grid gap-5 sm:grid-cols-2">
-            <div>
-                <label class="label" for="password">Contraseña</label>
-                <input id="password" name="password" type="password" class="field" required
-                       autocomplete="new-password" placeholder="••••••••">
-                <p class="mt-1.5 text-xs text-neutral-500">Ocho caracteres o más.</p>
-            </div>
+            <x-password-field autocomplete="new-password" hint="Ocho caracteres o más." />
 
-            <div>
-                <label class="label" for="password_confirmation">Repítela</label>
-                <input id="password_confirmation" name="password_confirmation" type="password" class="field" required
-                       autocomplete="new-password" placeholder="••••••••">
-            </div>
+            <x-password-field name="password_confirmation" label="Repítela" autocomplete="new-password" />
         </div>
 
         <div class="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4">

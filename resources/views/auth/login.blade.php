@@ -11,11 +11,7 @@
                    autocomplete="email" placeholder="tu@correo.com" value="{{ old('email') }}">
         </div>
 
-        <div>
-            <label class="label" for="password">Contraseña</label>
-            <input id="password" name="password" type="password" class="field" required
-                   autocomplete="current-password" placeholder="••••••••">
-        </div>
+        <x-password-field autocomplete="current-password" />
 
         <button type="submit" class="btn-primary w-full py-3">Entrar</button>
 

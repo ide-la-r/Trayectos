@@ -80,6 +80,30 @@ class WebFlowTest extends TestCase
         ]);
     }
 
+    public function test_las_contrasenas_se_pueden_ver(): void
+    {
+        /*
+         * Escribir una contraseña a ciegas en un móvil es la primera causa de
+         * «no me deja entrar». El ojo de la derecha la enseña.
+         *
+         * Se comprueba que el botón es type="button": sin eso, dentro de un
+         * formulario sería un botón de envío y darle al ojo mandaría el
+         * formulario a medio rellenar.
+         */
+        foreach (['/entrar', '/registro'] as $pantalla) {
+            $this->get($pantalla)
+                ->assertOk()
+                ->assertSee('Ver la contraseña')
+                ->assertSee('type="button"', false);
+        }
+
+        // En el registro son dos campos, cada uno con el suyo
+        $this->get('/registro')
+            ->assertSee('name="password"', false)
+            ->assertSee('name="password_confirmation"', false)
+            ->assertSee('Ocho caracteres o más.');
+    }
+
     public function test_a_new_user_can_register_and_land_on_the_dashboard(): void
     {
         $response = $this->post('/registro', [
